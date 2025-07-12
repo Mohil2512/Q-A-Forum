@@ -1,5 +1,7 @@
 # StackIt - QA Forum Platform
 
+[Try it](https://stack1t.vercel.app/){:target="_blank"}
+
 A modern, feature-rich Q&A platform built with Next.js, featuring the InfinityFX UI theme with glassmorphism effects and a sophisticated color palette.
 
 ## 🎨 InfinityFX Theme
