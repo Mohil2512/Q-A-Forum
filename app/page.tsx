@@ -1,101 +1,138 @@
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]/authOptions';
-import { FaSearch, FaQuestion, FaTags, FaUsers, FaChartLine } from 'react-icons/fa';
+import { FaSearch, FaQuestion, FaTags, FaUsers, FaChartLine, FaRocket, FaLightbulb, FaShieldAlt } from 'react-icons/fa';
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="bg-[#161b22]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 to-blue-900/20"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23a855f7%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        
+        <div className="container-responsive py-20 relative z-10">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-[#f0f6fc] mb-6">
-              Welcome to <span className="text-[#58a6ff]">StackIt</span>
+            <div className="mb-8">
+              <div className="inline-flex items-center px-6 py-3 rounded-full bg-gray-900/50 backdrop-blur-sm border border-purple-500/30 text-white text-sm font-medium mb-6">
+                <FaRocket className="mr-2" />
+                New Platform Launch
+              </div>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+              <span className="gradient-text">StackIt</span>
+              <br />
+              <span className="text-[#c8acd6]">Community</span>
             </h1>
-            <p className="text-xl text-[#c9d1d9] mb-8 max-w-3xl mx-auto">
-              Ask questions, share knowledge, and connect with developers from around the world. 
-              Get answers to your programming questions and help others learn.
+            
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+              Where developers connect, learn, and grow together. 
+              Ask questions, share knowledge, and build the future of technology.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
               {session ? (
                 <Link 
                   href="/questions/ask" 
-                  className="bg-[#238636] text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#2ea043] transition-github"
+                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
                 >
+                  <FaQuestion className="mr-2" />
                   Ask a Question
                 </Link>
               ) : (
                 <Link 
                   href="/auth/signin" 
-                  className="bg-[#238636] text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#2ea043] transition-github"
+                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
                 >
+                  <FaRocket className="mr-2" />
                   Get Started
                 </Link>
               )}
               <Link 
                 href="/questions" 
-                className="border border-[#30363d] text-[#c9d1d9] px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#21262d] transition-github"
+                className="btn btn-outline text-lg px-8 py-4"
               >
-                Browse Questions
+                <FaSearch className="mr-2" />
+                Explore Questions
               </Link>
+            </div>
+
+            {/* Stats Preview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">1,000+</div>
+                <div className="text-gray-300 text-sm">Questions Asked</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">5,000+</div>
+                <div className="text-gray-300 text-sm">Answers Provided</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">500+</div>
+                <div className="text-gray-300 text-sm">Active Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">50+</div>
+                <div className="text-gray-300 text-sm">Topics Covered</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#f0f6fc] mb-4">
-              Why Choose StackIt?
+      <section className="py-20">
+        <div className="container-responsive">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Why Choose <span className="gradient-text">StackIt</span>?
             </h2>
-            <p className="text-lg text-[#c9d1d9] max-w-2xl mx-auto">
-              Our platform is designed to make learning and sharing knowledge easy and effective.
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Our platform is designed to make learning and sharing knowledge effortless and engaging.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#1f6feb] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaSearch className="w-8 h-8 text-[#58a6ff]" />
+                      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="card p-8 text-center hover-lift hover-glow">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 glow">
+                <FaSearch className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-[#f0f6fc] mb-2">Smart Search</h3>
-              <p className="text-[#c9d1d9]">
-                Find answers quickly with our powerful search and filtering system.
+              <h3 className="text-xl font-semibold text-white mb-4">Smart Search</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Find answers instantly with our AI-powered search and intelligent filtering system.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#1f6feb] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaQuestion className="w-8 h-8 text-[#58a6ff]" />
+            <div className="card p-8 text-center hover-lift hover-glow">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 glow">
+                <FaLightbulb className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-[#f0f6fc] mb-2">Quality Answers</h3>
-              <p className="text-[#c9d1d9]">
-                Get verified answers from experienced developers and experts.
+              <h3 className="text-xl font-semibold text-white mb-4">Quality Answers</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Get verified solutions from experienced developers and industry experts.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#a371f7] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaTags className="w-8 h-8 text-[#bc8cff]" />
+            <div className="card p-8 text-center hover-lift hover-glow">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 glow">
+                <FaTags className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-[#f0f6fc] mb-2">Organized Topics</h3>
-              <p className="text-[#c9d1d9]">
-                Questions are organized by tags and categories for easy navigation.
+              <h3 className="text-xl font-semibold text-white mb-4">Organized Topics</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Questions are perfectly organized by tags and categories for seamless navigation.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#d29922] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaUsers className="w-8 h-8 text-[#f0b72f]" />
+            <div className="card p-8 text-center hover-lift hover-glow">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 glow">
+                <FaUsers className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-[#f0f6fc] mb-2">Community</h3>
-              <p className="text-[#c9d1d9]">
-                Join a community of developers helping each other grow and learn.
+              <h3 className="text-xl font-semibold text-white mb-4">Global Community</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Join a worldwide community of developers helping each other grow and innovate.
               </p>
             </div>
           </div>
@@ -103,69 +140,80 @@ export default async function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-[#161b22] py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#f0f6fc] mb-4">
-              Platform Statistics
+      <section className="py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 to-blue-900/20"></div>
+        <div className="container-responsive relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Platform <span className="gradient-text">Statistics</span>
             </h2>
-            <p className="text-lg text-[#c9d1d9]">
+            <p className="text-xl text-gray-300">
               See how our community is growing and helping developers worldwide.
             </p>
           </div>
           
           <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#58a6ff] mb-2">1,000+</div>
-              <div className="text-[#c9d1d9]">Questions Asked</div>
+            <div className="card p-8 text-center hover-lift">
+              <div className="text-5xl font-bold gradient-text mb-4">1,000+</div>
+              <div className="text-gray-300 text-lg">Questions Asked</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#58a6ff] mb-2">5,000+</div>
-              <div className="text-[#c9d1d9]">Answers Provided</div>
+            <div className="card p-8 text-center hover-lift">
+              <div className="text-5xl font-bold gradient-text mb-4">5,000+</div>
+              <div className="text-gray-300 text-lg">Answers Provided</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#bc8cff] mb-2">500+</div>
-              <div className="text-[#c9d1d9]">Active Users</div>
+            <div className="card p-8 text-center hover-lift">
+              <div className="text-5xl font-bold gradient-text mb-4">500+</div>
+              <div className="text-gray-300 text-lg">Active Users</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#f0b72f] mb-2">50+</div>
-              <div className="text-[#c9d1d9]">Topics Covered</div>
+            <div className="card p-8 text-center hover-lift">
+              <div className="text-5xl font-bold gradient-text mb-4">50+</div>
+              <div className="text-gray-300 text-lg">Topics Covered</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-[#f0f6fc] mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-lg text-[#c9d1d9] mb-8">
-            Join thousands of developers who are already learning and sharing knowledge on our platform.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {session ? (
+      <section className="py-20">
+        <div className="container-responsive">
+          <div className="card p-12 text-center max-w-4xl mx-auto">
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-8 glow-lg">
+              <FaShieldAlt className="w-12 h-12 text-white" />
+            </div>
+            
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Ready to <span className="gradient-text">Get Started</span>?
+            </h2>
+            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+              Join thousands of developers who are already learning and sharing knowledge on our platform.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              {session ? (
+                <Link 
+                  href="/questions/ask" 
+                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                >
+                  <FaQuestion className="mr-2" />
+                  Ask Your First Question
+                </Link>
+              ) : (
+                <Link 
+                  href="/auth/signup" 
+                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                >
+                  <FaRocket className="mr-2" />
+                  Create Account
+                </Link>
+              )}
               <Link 
-                href="/questions/ask" 
-                className="bg-[#238636] text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#2ea043] transition-github"
+                href="/questions" 
+                className="btn btn-outline text-lg px-8 py-4"
               >
-                Ask Your First Question
+                <FaSearch className="mr-2" />
+                Explore Questions
               </Link>
-            ) : (
-              <Link 
-                href="/auth/signup" 
-                className="bg-[#238636] text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#2ea043] transition-github"
-              >
-                Create Account
-              </Link>
-            )}
-            <Link 
-              href="/questions" 
-              className="border border-[#30363d] text-[#c9d1d9] px-8 py-3 rounded-lg text-lg font-medium hover:bg-[#21262d] transition-github"
-            >
-              Explore Questions
-            </Link>
+            </div>
           </div>
         </div>
       </section>

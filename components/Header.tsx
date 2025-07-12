@@ -1,257 +1,307 @@
 'use client';
 
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaUser, FaSignOutAlt, FaBell, FaCog } from 'react-icons/fa';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { 
+  FiSearch, 
+  FiMenu, 
+  FiX, 
+  FiUser, 
+  FiLogOut, 
+  FiSettings,
+  FiBell,
+  FiPlus,
+  FiHome,
+  FiTag,
+  FiUsers
+} from 'react-icons/fi';
 import NotificationDropdown from './NotificationDropdown';
+import toast from 'react-hot-toast';
 
 export default function Header() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const menuRef = useRef<HTMLDivElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Fetch notification count
+  // Debounced search
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchNotificationCount();
-    }
-  }, [session]);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 2) {
+        performSearch();
+      } else {
+        setSearchResults([]);
+        setShowSearchResults(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setIsNotificationOpen(false);
-      }
-    }
+    }, 300);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  const fetchNotificationCount = async () => {
+  const performSearch = async () => {
+    setIsSearching(true);
     try {
-      const response = await fetch('/api/notifications/count');
-      const data = await response.json();
-      setNotificationCount(data.count || 0);
+      const response = await fetch(`/api/questions?search=${encodeURIComponent(searchQuery)}&limit=5`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.questions || []);
+        setShowSearchResults(true);
+      }
     } catch (error) {
-      console.error('Error fetching notification count:', error);
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/questions?search=${encodeURIComponent(searchQuery.trim())}`;
+      router.push(`/questions?search=${encodeURIComponent(searchQuery)}`);
+      setShowSearchResults(false);
+      setSearchQuery('');
     }
   };
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' });
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      toast.success('Logged out successfully');
+      router.push('/');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
   };
 
   return (
-    <header className="bg-[#161b22] shadow-github border-b border-[#30363d] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/10">
+      <div className="container-responsive">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/questions" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#238636] to-[#2ea043] rounded-lg flex items-center justify-center shadow-github">
-              <span className="text-white font-bold text-xl">S</span>
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center glow group-hover:glow-lg transition-all duration-300">
+              <FiHome className="w-6 h-6 text-white" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-[#f0f6fc]">StackIt</span>
-              <span className="text-xs text-[#7d8590]">Q&A Community</span>
-            </div>
+            <span className="text-2xl font-bold gradient-text">StackIt</span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <form onSubmit={handleSearch} className="w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search questions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-[#0d1117] border border-[#30363d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#238636] focus:border-[#238636] text-[#c9d1d9] placeholder-[#7d8590] transition-github"
-                />
-                <FaSearch className="absolute left-3 top-3 text-[#7d8590]" />
-              </div>
-            </form>
-          </div>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/questions" className="text-[#c9d1d9] hover:text-[#f0f6fc] transition-github">
-              Questions
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link 
+              href="/questions" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center space-x-2"
+            >
+              <FiSearch className="w-4 h-4" />
+              <span>Questions</span>
             </Link>
-            <Link href="/tags" className="text-[#c9d1d9] hover:text-[#f0f6fc] transition-github">
-              Tags
+            <Link 
+              href="/tags" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center space-x-2"
+            >
+              <FiTag className="w-4 h-4" />
+              <span>Tags</span>
             </Link>
-            {session ? (
-              <Link href="/questions/ask" className="btn-primary">
+            {session && (
+              <Link 
+                href="/questions/ask" 
+                className="btn btn-primary text-sm px-4 py-2"
+              >
+                <FiPlus className="w-4 h-4 mr-1" />
                 Ask Question
-              </Link>
-            ) : (
-              <Link href="/auth/signin" className="btn-primary">
-                Sign In
               </Link>
             )}
           </nav>
 
+          {/* Search Bar */}
+          <div className="hidden md:block flex-1 max-w-md mx-8 relative">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-300"
+              />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                </div>
+              )}
+            </form>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                {searchResults.map((question: any) => (
+                  <Link
+                    key={question._id}
+                    href={`/questions/${question._id}`}
+                    className="block px-4 py-3 hover:bg-white/5 transition-colors duration-200 border-b border-white/5 last:border-b-0"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <div className="text-gray-100 font-medium line-clamp-1">{question.title}</div>
+                    <div className="text-gray-400 text-sm line-clamp-1">{question.shortDescription}</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* User Menu */}
-          {session && (
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Notification Button */}
-              <div className="relative" ref={notificationRef}>
-                <button
-                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className="p-2 text-[#c9d1d9] hover:text-[#f0f6fc] transition-github relative"
-                >
-                  <FaBell className="w-5 h-5" />
-                  {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#da3633] rounded-full text-xs text-white flex items-center justify-center px-1">
-                      {notificationCount > 9 ? '9+' : notificationCount}
-                    </span>
-                  )}
-                </button>
+          <div className="flex items-center space-x-4">
+            {session ? (
+              <>
+                <NotificationDropdown />
                 
-                {isNotificationOpen && (
-                  <NotificationDropdown 
-                    onClose={() => setIsNotificationOpen(false)} 
-                    onUpdateCount={fetchNotificationCount}
-                  />
-                )}
-              </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="flex items-center space-x-2 p-2 rounded-xl hover:bg-white/5 transition-colors duration-300"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <FiUser className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-gray-300 hidden lg:block">{session.user?.username}</span>
+                  </button>
 
-              {/* User Dropdown */}
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center space-x-2 text-[#c9d1d9] hover:text-[#f0f6fc] transition-github"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#238636] to-[#2ea043] rounded-full flex items-center justify-center">
-                    <FaUser className="text-white text-sm" />
-                  </div>
-                  <span>{session.user?.username}</span>
-                  {session.user?.role === 'admin' && (
-                    <span className="badge badge-info text-xs">Admin</span>
+                  {/* User Dropdown */}
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                      <div className="py-2">
+                        <Link
+                          href="/profile"
+                          className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <FiUser className="w-4 h-4 mr-3" />
+                          Profile
+                        </Link>
+                        {session.user?.role === 'admin' && (
+                          <Link
+                            href="/admin-panel"
+                            className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <FiSettings className="w-4 h-4 mr-3" />
+                            Admin Panel
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                        >
+                          <FiLogOut className="w-4 h-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  {session.user?.role === 'master' && (
-                    <span className="badge badge-warning text-xs">Master</span>
-                  )}
-                </button>
-
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#161b22] rounded-lg shadow-github-lg border border-[#30363d] py-1 z-50">
-                    <Link
-                      href="/profile"
-                      className="flex items-center px-4 py-2 text-sm text-[#c9d1d9] hover:bg-[#21262d] transition-github"
-                    >
-                      <FaUser className="mr-2" />
-                      My Profile
-                    </Link>
-                    {(session.user?.role === 'admin' || session.user?.role === 'master') && (
-                      <Link
-                        href="/admin-panel"
-                        className="flex items-center px-4 py-2 text-sm text-[#c9d1d9] hover:bg-[#21262d] transition-github"
-                      >
-                        <FaCog className="mr-2" />
-                        Admin Panel
-                      </Link>
-                    )}
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center w-full px-4 py-2 text-sm text-[#c9d1d9] hover:bg-[#21262d] transition-github"
-                    >
-                      <FaSignOutAlt className="mr-2" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link href="/auth/signin" className="btn btn-outline text-sm">
+                  Sign In
+                </Link>
+                <Link href="/auth/signup" className="btn btn-primary text-sm">
+                  Sign Up
+                </Link>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-[#c9d1d9] hover:text-[#f0f6fc] transition-github"
+              className="md:hidden p-2 rounded-xl hover:bg-white/5 transition-colors duration-300"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              {isMenuOpen ? (
+                <FiX className="w-6 h-6 text-gray-300" />
+              ) : (
+                <FiMenu className="w-6 h-6 text-gray-300" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Search */}
+        <div className="md:hidden py-4 border-t border-white/10">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-300"
+            />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+              </div>
+            )}
+          </form>
+
+          {/* Mobile Search Results */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="mt-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+              {searchResults.map((question: any) => (
+                <Link
+                  key={question._id}
+                  href={`/questions/${question._id}`}
+                  className="block px-4 py-3 hover:bg-white/5 transition-colors duration-200 border-b border-white/5 last:border-b-0"
+                  onClick={() => {
+                    setShowSearchResults(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <div className="text-gray-100 font-medium line-clamp-1">{question.title}</div>
+                  <div className="text-gray-400 text-sm line-clamp-1">{question.shortDescription}</div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-[#161b22] border-t border-[#30363d]">
+          <div className="md:hidden py-4 border-t border-white/10">
+            <nav className="space-y-2">
               <Link
                 href="/questions"
-                className="block px-3 py-2 text-[#c9d1d9] hover:text-[#f0f6fc] hover:bg-[#21262d] transition-github rounded-lg"
+                className="flex items-center px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
               >
+                <FiSearch className="w-4 h-4 mr-3" />
                 Questions
               </Link>
               <Link
                 href="/tags"
-                className="block px-3 py-2 text-[#c9d1d9] hover:text-[#f0f6fc] hover:bg-[#21262d] transition-github rounded-lg"
+                className="flex items-center px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
               >
+                <FiTag className="w-4 h-4 mr-3" />
                 Tags
               </Link>
-              {session ? (
-                <>
-                  <Link
-                    href="/questions/ask"
-                    className="block px-3 py-2 text-[#238636] hover:text-[#2ea043] hover:bg-[#21262d] transition-github rounded-lg"
-                  >
-                    Ask Question
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="block px-3 py-2 text-[#c9d1d9] hover:text-[#f0f6fc] hover:bg-[#21262d] transition-github rounded-lg"
-                  >
-                    My Profile
-                  </Link>
-                  {(session.user?.role === 'admin' || session.user?.role === 'master') && (
-                    <Link
-                      href="/admin-panel"
-                      className="block px-3 py-2 text-[#c9d1d9] hover:text-[#f0f6fc] hover:bg-[#21262d] transition-github rounded-lg"
-                    >
-                      Admin Panel
-                    </Link>
-                  )}
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-3 py-2 text-[#c9d1d9] hover:text-[#f0f6fc] hover:bg-[#21262d] transition-github rounded-lg"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
+              {session && (
                 <Link
-                  href="/auth/signin"
-                  className="block px-3 py-2 text-[#238636] hover:text-[#2ea043] hover:bg-[#21262d] transition-github rounded-lg"
+                  href="/questions/ask"
+                  className="flex items-center px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  Sign In
+                  <FiPlus className="w-4 h-4 mr-3" />
+                  Ask Question
                 </Link>
               )}
-            </div>
+            </nav>
           </div>
         )}
       </div>

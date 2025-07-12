@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../auth/[...nextauth]/authOptions';
 import dbConnect from '@/lib/mongodb';
 import Answer from '@/models/Answer';
 import Question from '@/models/Question';
@@ -11,7 +12,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
       return NextResponse.json(

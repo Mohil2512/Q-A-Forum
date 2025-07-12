@@ -1,109 +1,161 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
 import { 
-  FiPlus, 
   FiSearch, 
-  FiTrendingUp, 
-  FiClock, 
+  FiFilter, 
+  FiPlus, 
+  FiEye, 
   FiMessageSquare, 
-  FiFilter,
   FiThumbsUp,
+  FiThumbsDown,
+  FiClock,
   FiTag,
   FiUser,
-  FiX
+  FiTrendingUp,
+  FiStar,
+  FiCheck
 } from 'react-icons/fi';
-import { formatDistanceToNow } from 'date-fns';
 import Header from '@/components/Header';
-import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
+
+interface Tag {
+  name: string;
+  count?: number;
+  description?: string;
+}
 
 interface Question {
   _id: string;
   title: string;
-  content: string;
   shortDescription: string;
+  content: string;
+  images: string[];
   author: {
+    _id: string;
     username: string;
     reputation: number;
   };
-  tags: string[];
+  tags: (string | Tag)[];
   votes: {
     upvotes: string[];
     downvotes: string[];
   };
   views: number;
   answers: number;
-  createdAt: string;
   isAccepted: boolean;
+  createdAt: string;
 }
 
 export default function QuestionsPage() {
   const { data: session } = useSession();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
-  const [filter, setFilter] = useState(searchParams.get('filter') || 'all');
-  const [selectedTag, setSelectedTag] = useState(searchParams.get('tag') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState('newest');
+  const [filterBy, setFilterBy] = useState('all');
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [searchResults, setSearchResults] = useState<Question[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 2) {
+        performSearch();
+      } else {
+        setSearchResults([]);
+        setShowSearchResults(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchQuestions();
-  }, [sortBy, filter, selectedTag]);
+    fetchTags();
+  }, [sortBy, filterBy, selectedTags]);
 
   const fetchQuestions = async () => {
     try {
       const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (sortBy) params.append('sort', sortBy);
-      if (filter) params.append('filter', filter);
-      if (selectedTag) params.append('tag', selectedTag);
-      
-      const response = await fetch(`/api/questions?${params}`);
-      const data = await response.json();
-      setQuestions(data.questions || []);
+      if (searchQuery) params.append('search', searchQuery);
+      if (selectedTags.length > 0) params.append('tags', selectedTags.join(','));
+      if (sortBy !== 'newest') params.append('sort', sortBy);
+      if (filterBy !== 'all') params.append('filter', filterBy);
+
+      const response = await fetch(`/api/questions?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        setQuestions(data.questions || []);
+      }
     } catch (error) {
       console.error('Error fetching questions:', error);
+      toast.error('Failed to load questions');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableTags(data.tags || []);
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+
+  const performSearch = async () => {
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/questions?search=${encodeURIComponent(searchQuery)}&limit=5`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.questions || []);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchQuestions();
-    updateURL();
+    if (searchQuery.trim()) {
+      router.push(`/questions?search=${encodeURIComponent(searchQuery)}`);
+      setShowSearchResults(false);
+    }
   };
 
-  const handleSortChange = (newSort: string) => {
-    setSortBy(newSort);
-    updateURL();
-  };
-
-  const handleFilterChange = (newFilter: string) => {
-    setFilter(newFilter);
-    updateURL();
-  };
-
-  const updateURL = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    if (sortBy) params.append('sort', sortBy);
-    if (filter) params.append('filter', filter);
-    if (selectedTag) params.append('tag', selectedTag);
-    
-    const newURL = params.toString() ? `?${params.toString()}` : '';
-    router.push(`/questions${newURL}`);
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
+    setSearchQuery('');
+    setSelectedTags([]);
     setSortBy('newest');
-    setFilter('all');
-    setSelectedTag('');
+    setFilterBy('all');
     router.push('/questions');
   };
 
@@ -111,273 +163,244 @@ export default function QuestionsPage() {
     return votes.upvotes.length - votes.downvotes.length;
   };
 
-  return (
-    <div className="min-h-screen bg-[#0d1117]">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-[#f0f6fc]">Questions</h1>
-              <p className="mt-2 text-[#7d8590]">Find answers to your questions or help others</p>
-            </div>
-            {session && (
-              <Link
-                href="/questions/ask"
-                className="inline-flex items-center px-4 py-2 btn-primary"
-              >
-                <FiPlus className="mr-2" />
-                Ask Question
-              </Link>
-            )}
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black">
+        <Header />
+        <div className="container-responsive py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+            <p className="mt-4 text-gray-300">Loading questions...</p>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-80 space-y-6">
-            {/* Search */}
-            <div className="card p-4">
-              <form onSubmit={handleSearch} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#c9d1d9] mb-2">
-                    Search Questions
-                  </label>
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#7d8590] w-4 h-4" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search questions..."
-                      className="w-full pl-10 pr-4 py-2 bg-[#0d1117] border border-[#30363d] rounded-lg focus:ring-2 focus:ring-[#238636] focus:border-[#238636] text-[#c9d1d9] placeholder-[#7d8590] transition-github"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full btn-primary"
-                >
-                  Search
-                </button>
-              </form>
-            </div>
-
-            {/* Sort Options */}
-            <div className="card p-4">
-              <h3 className="text-lg font-semibold text-[#f0f6fc] mb-4 flex items-center">
-                <FiFilter className="mr-2" />
-                Sort by
-              </h3>
-              <div className="space-y-2">
-                {[
-                  { value: 'newest', label: 'Newest', icon: FiClock },
-                  { value: 'popular', label: 'Most Popular', icon: FiTrendingUp },
-                  { value: 'votes', label: 'Most Voted', icon: FiThumbsUp },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-github flex items-center ${
-                      sortBy === option.value 
-                        ? 'bg-[#238636] text-white border border-[#238636]' 
-                        : 'text-[#c9d1d9] hover:bg-[#21262d] hover:text-[#f0f6fc]'
-                    }`}
-                  >
-                    <option.icon className="mr-2 w-4 h-4" />
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Filter Options */}
-            <div className="card p-4">
-              <h3 className="text-lg font-semibold text-[#f0f6fc] mb-4">Filter</h3>
-              <div className="space-y-2">
-                {[
-                  { value: 'all', label: 'All Questions' },
-                  { value: 'unanswered', label: 'No Answers' },
-                  { value: 'accepted', label: 'Accepted Answers' },
-                  { value: 'upvoted', label: 'Highly Upvoted' },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleFilterChange(option.value)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-github ${
-                      filter === option.value 
-                        ? 'bg-[#238636] text-white border border-[#238636]' 
-                        : 'text-[#c9d1d9] hover:bg-[#21262d] hover:text-[#f0f6fc]'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Active Filters */}
-            {(searchTerm || selectedTag || filter !== 'all') && (
-              <div className="card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-[#f0f6fc]">Active Filters</h3>
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-[#58a6ff] hover:text-[#79c0ff] transition-github"
-                  >
-                    Clear all
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {searchTerm && (
-                    <div className="flex items-center justify-between bg-[#21262d] px-3 py-2 rounded-lg">
-                      <span className="text-sm text-[#c9d1d9]">Search: "{searchTerm}"</span>
-                      <button
-                        onClick={() => setSearchTerm('')}
-                        className="text-[#7d8590] hover:text-[#c9d1d9] transition-github"
-                      >
-                        <FiX className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  {selectedTag && (
-                    <div className="flex items-center justify-between bg-[#21262d] px-3 py-2 rounded-lg">
-                      <span className="text-sm text-[#c9d1d9]">Tag: {selectedTag}</span>
-                      <button
-                        onClick={() => setSelectedTag('')}
-                        className="text-[#7d8590] hover:text-[#c9d1d9] transition-github"
-                      >
-                        <FiX className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  {filter !== 'all' && (
-                    <div className="flex items-center justify-between bg-[#21262d] px-3 py-2 rounded-lg">
-                      <span className="text-sm text-[#c9d1d9]">Filter: {filter}</span>
-                      <button
-                        onClick={() => setFilter('all')}
-                        className="text-[#7d8590] hover:text-[#c9d1d9] transition-github"
-                      >
-                        <FiX className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+  return (
+    <div className="min-h-screen bg-black">
+      <Header />
+      
+      <main className="container-responsive py-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold gradient-text mb-2">
+              Questions
+            </h1>
+            <p className="text-gray-300 text-lg">
+              Find answers to your programming questions or help others
+            </p>
           </div>
+          
+          {session && (
+            <Link 
+              href="/questions/ask" 
+              className="btn btn-primary mt-4 lg:mt-0 text-lg"
+            >
+              <FiPlus className="w-4 h-4 mr-2" />
+              Ask Question
+            </Link>
+          )}
+        </div>
 
-          {/* Questions List */}
-          <div className="flex-1">
-            {loading ? (
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="card p-6 animate-pulse">
-                    <div className="h-4 bg-[#21262d] rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-[#21262d] rounded w-1/2 mb-4"></div>
-                    <div className="flex space-x-4">
-                      <div className="h-3 bg-[#21262d] rounded w-16"></div>
-                      <div className="h-3 bg-[#21262d] rounded w-20"></div>
-                      <div className="h-3 bg-[#21262d] rounded w-24"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : questions.length === 0 ? (
-              <div className="card p-8 text-center">
-                <FiMessageSquare className="mx-auto h-12 w-12 text-[#7d8590] mb-4" />
-                <h3 className="text-lg font-medium text-[#f0f6fc] mb-2">No questions found</h3>
-                <p className="text-[#7d8590] mb-4">
-                  {searchTerm || selectedTag || filter !== 'all' 
-                    ? 'Try adjusting your search or filters.' 
-                    : 'Be the first to ask a question!'}
-                </p>
-                {session && (
+        {/* Search and Filters */}
+        <div className="card p-6 mb-8">
+          {/* Search Bar */}
+          <div className="relative mb-6">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input pl-12 text-lg"
+              />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#433d8b] w-5 h-5" />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#c8acd6]"></div>
+                </div>
+              )}
+            </form>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 card overflow-hidden z-50">
+                {searchResults.map((question) => (
                   <Link
-                    href="/questions/ask"
-                    className="btn-primary"
+                    key={question._id}
+                    href={`/questions/${question._id}`}
+                    className="block px-4 py-3 hover:bg-[#433d8b]/10 transition-colors duration-200 border-b border-[#433d8b]/20 last:border-b-0"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      setSearchQuery('');
+                    }}
                   >
-                    Ask Question
+                    <div className="text-[#c8acd6] font-medium line-clamp-1">{question.title}</div>
+                    <div className="text-[#433d8b] text-sm line-clamp-1">{question.shortDescription}</div>
                   </Link>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {questions.map((question) => (
-                  <div key={question._id} className="card p-6 hover:shadow-github-lg transition-github">
-                    <div className="flex items-start space-x-4">
-                      {/* Vote Count */}
-                      <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                        <div className="text-lg font-bold text-[#f0f6fc]">
-                          {getVoteCount(question.votes)}
-                        </div>
-                        <div className="text-xs text-[#7d8590]">votes</div>
-                      </div>
-
-                      {/* Question Content */}
-                      <div className="flex-1 min-w-0">
-                        <Link 
-                          href={`/questions/${question._id}`}
-                          className="block group"
-                        >
-                          <h3 className="text-lg font-semibold text-[#f0f6fc] group-hover:text-[#58a6ff] transition-github line-clamp-2 mb-2">
-                            {question.title}
-                          </h3>
-                          <p className="text-[#7d8590] line-clamp-2 mb-3">
-                            {question.shortDescription}
-                          </p>
-                        </Link>
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {question.tags.slice(0, 3).map((tag) => (
-                            <span 
-                              key={tag} 
-                              className="tag text-xs"
-                            >
-                              <FiTag className="w-3 h-3 mr-1" />
-                              {tag}
-                            </span>
-                          ))}
-                          {question.tags.length > 3 && (
-                            <span className="text-xs text-[#7d8590]">
-                              +{question.tags.length - 3} more
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Meta Info */}
-                        <div className="flex items-center justify-between text-sm text-[#7d8590]">
-                          <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-1">
-                              <FiUser className="w-4 h-4" />
-                              <span>{question.author.username}</span>
-                              <span className="text-[#238636]">({question.author.reputation})</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <FiClock className="w-4 h-4" />
-                              <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-1">
-                              <FiMessageSquare className="w-4 h-4" />
-                              <span>{question.answers} answers</span>
-                            </div>
-                            {question.isAccepted && (
-                              <span className="badge badge-success">Accepted</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 ))}
               </div>
             )}
           </div>
+
+          {/* Filters */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Sort By */}
+            <div>
+              <label className="block text-sm font-medium text-[#c8acd6] mb-2">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="input"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="votes">Most Voted</option>
+                <option value="views">Most Viewed</option>
+                <option value="answers">Most Answered</option>
+              </select>
+            </div>
+
+            {/* Filter By */}
+            <div>
+              <label className="block text-sm font-medium text-[#c8acd6] mb-2">Filter By</label>
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value)}
+                className="input"
+              >
+                <option value="all">All Questions</option>
+                <option value="unanswered">Unanswered</option>
+                <option value="answered">Answered</option>
+                <option value="accepted">Accepted</option>
+              </select>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="btn btn-outline w-full text-lg"
+              >
+                <FiFilter className="w-4 h-4 mr-2" />
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Tags */}
+          {availableTags.length > 0 && (
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-[#c8acd6] mb-3">Filter by Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {availableTags.slice(0, 10).map((tag) => (
+                  <button
+                    key={tag.name}
+                    onClick={() => handleTagToggle(tag.name)}
+                    className={`tag ${
+                      selectedTags.includes(tag.name) 
+                        ? 'bg-[#433d8b]/40 border-[#c8acd6]/50' 
+                        : 'bg-[#433d8b]/20 border-[#433d8b]/30'
+                    }`}
+                  >
+                    <FiTag className="w-3 h-3 mr-1" />
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Questions List */}
+        <div className="space-y-6">
+          {questions.length === 0 ? (
+            <div className="card p-12 text-center">
+              <FiSearch className="mx-auto h-16 w-16 text-[#433d8b] mb-4" />
+              <h3 className="text-xl font-medium text-[#c8acd6] mb-2">No questions found</h3>
+              <p className="text-[#c8acd6] mb-6">Try adjusting your search or filters.</p>
+              {session && (
+                <Link href="/questions/ask" className="btn btn-primary text-lg">
+                  <FiPlus className="w-4 h-4 mr-2" />
+                  Ask the First Question
+                </Link>
+              )}
+            </div>
+          ) : (
+            questions.map((question) => (
+              <div key={question._id} className="card p-6 hover-lift">
+                <div className="flex items-start space-x-4">
+                  {/* Vote Stats */}
+                  <div className="flex flex-col items-center space-y-2 min-w-[60px]">
+                    <div className="flex items-center space-x-1">
+                      <FiThumbsUp className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium text-[#c8acd6]">{question.votes.upvotes.length}</span>
+                    </div>
+                    <div className="text-lg font-bold gradient-text">
+                      {getVoteCount(question.votes)}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <FiThumbsDown className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium text-[#c8acd6]">{question.votes.downvotes.length}</span>
+                    </div>
+                  </div>
+
+                  {/* Question Content */}
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/questions/${question._id}`} className="block">
+                      <h2 className="text-xl font-semibold gradient-text mb-2 hover:text-[#c8acd6] transition-colors duration-200">
+                        {question.title}
+                      </h2>
+                    </Link>
+                    <p className="text-[#c8acd6] mb-3 line-clamp-2">{question.shortDescription}</p>
+                    
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {question.tags.slice(0, 3).map((tag) => (
+                        <span key={typeof tag === 'string' ? tag : tag.name} className="tag">
+                          <FiTag className="w-3 h-3 mr-1" />
+                          {typeof tag === 'string' ? tag : tag.name}
+                        </span>
+                      ))}
+                      {question.tags.length > 3 && (
+                        <span className="text-[#433d8b] text-sm">+{question.tags.length - 3} more</span>
+                      )}
+                    </div>
+
+                    {/* Meta Info */}
+                    <div className="flex items-center justify-between text-sm text-[#433d8b]">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <FiUser className="w-4 h-4" />
+                          <span>{question.author.username}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <FiEye className="w-4 h-4" />
+                          <span>{question.views} views</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <FiMessageSquare className="w-4 h-4" />
+                          <span>{question.answers} answers</span>
+                        </div>
+                        {question.isAccepted && (
+                          <div className="flex items-center space-x-1">
+                            <FiCheck className="w-4 h-4 text-green-500" />
+                            <span className="text-green-500">Accepted</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <FiClock className="w-4 h-4" />
+                        <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </main>
     </div>

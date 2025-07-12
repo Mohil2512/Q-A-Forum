@@ -105,7 +105,24 @@ export async function POST(request: NextRequest) {
       .populate('author', 'username reputation')
       .lean();
     
-    return NextResponse.json(updatedItem);
+    if (!updatedItem) {
+      return NextResponse.json(
+        { error: 'Item not found after update' },
+        { status: 404 }
+      );
+    }
+    
+    // Return vote counts separately
+    const response = {
+      ...updatedItem,
+      voteCounts: {
+        upvotes: (updatedItem as any).votes.upvotes.length,
+        downvotes: (updatedItem as any).votes.downvotes.length,
+        total: (updatedItem as any).votes.upvotes.length - (updatedItem as any).votes.downvotes.length
+      }
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error voting:', error);
     return NextResponse.json(

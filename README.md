@@ -1,193 +1,217 @@
-# StackIt - Q&A Community Platform
+# StackIt - QA Forum Platform
 
-A modern, feature-rich Q&A platform built with Next.js, TypeScript, and MongoDB, designed for developers to ask questions, share knowledge, and build a thriving community.
+A modern, feature-rich Q&A platform built with Next.js, featuring the InfinityFX UI theme with glassmorphism effects and a sophisticated color palette.
 
-## 🌐 Live Demo
+## 🎨 InfinityFX Theme
 
-**Visit the application:** [stack1t.vercel.app](https://stack1t.vercel.app)
+This application features a custom InfinityFX-inspired theme with:
+- **Color Palette**: `#17153b`, `#2e236c`, `#433d8b`, `#c8acd6`
+- **Glassmorphism Effects**: Backdrop blur and transparency
+- **Modern Gradients**: Smooth color transitions
+- **Responsive Design**: Mobile-first approach
+- **Smooth Animations**: Hover effects and transitions
 
-## ✨ Features
+## 🚀 Features
 
 ### Core Functionality
-- **Ask & Answer Questions**: Create detailed questions with rich text formatting
+- **User Authentication**: Secure sign-in/sign-up with NextAuth.js
+- **Question Management**: Ask, edit, and manage questions
+- **Answer System**: Provide and accept answers
 - **Voting System**: Upvote/downvote questions and answers
-- **Accept Answers**: Mark the best answer as accepted
-- **Tag System**: Organize content with tags for easy discovery
-- **Search & Filter**: Find questions by tags, popularity, and date
-- **Image Support**: Attach images to questions and answers
+- **Search & Filter**: Advanced search with real-time results
+- **Tag System**: Organize content with tags
+- **Notifications**: Real-time notification system
+- **User Profiles**: Comprehensive user profiles with statistics
 
-### User Experience
-- **GitHub Dark Theme**: Modern, eye-friendly dark interface
-- **Responsive Design**: Works seamlessly on desktop and mobile
-- **Real-time Notifications**: Get notified for mentions, answers, and interactions
-- **User Profiles**: Track reputation, questions, and answers
-- **Edit & Delete**: Manage your own content
+### Admin Panel
+- **User Management**: Ban, suspend, and manage users
+- **Content Moderation**: Review and manage questions/answers
+- **Role-based Access**: Master admin and regular admin roles
+- **Analytics Dashboard**: Platform statistics and insights
 
-### Reputation System
-- **+50 points** for asking a question
-- **+100 points** for answering a question
-- **+50 points** for having an answer accepted
-- **Reputation tracking** and display on profiles
-
-### Admin Features
-- **Master Admin**: Special privileges for platform management
-- **User Management**: Ban, suspend, and delete user accounts
-- **Admin Panel**: Comprehensive dashboard for platform administration
-- **Content Moderation**: Manage questions, answers, and user behavior
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Icons** - Icon library
-- **React Hot Toast** - Toast notifications
-
-### Backend
-- **Next.js API Routes** - Server-side API endpoints
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB object modeling
-- **NextAuth.js** - Authentication system
-
-### Deployment
-- **Vercel** - Hosting and deployment platform
-- **MongoDB Atlas** - Cloud database hosting
-
-## 🚀 Getting Started
+## 🛠️ Setup Instructions
 
 ### Prerequisites
 - Node.js 18+ 
 - MongoDB database
-- npm or yarn package manager
+- npm or yarn
 
-### Installation
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd QA_Forum
+npm install
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd QA_Forum
-   ```
+### 2. Environment Configuration
+Create a `.env.local` file in the root directory:
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```env
+# Database
+MONGODB_URI=mongodb://localhost:27017/stackit
 
-3. **Environment Setup**
-   Create a `.env.local` file in the root directory:
-   ```env
-   MONGODB_URI=your_mongodb_connection_string
-   NEXTAUTH_SECRET=your_nextauth_secret
-   NEXTAUTH_URL=http://localhost:3000
-   GITHUB_ID=your_github_oauth_id
-   GITHUB_SECRET=your_github_oauth_secret
-   ```
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
 
-4. **Database Setup**
-   ```bash
-   npm run setup-admin
-   ```
+# Email (optional)
+EMAIL_SERVER_HOST=smtp.gmail.com
+EMAIL_SERVER_PORT=587
+EMAIL_SERVER_USER=your-email@gmail.com
+EMAIL_SERVER_PASSWORD=your-app-password
+EMAIL_FROM=noreply@stackit.com
+```
 
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
+### 3. Database Setup
+Run the database setup script to initialize the database with sample data:
 
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+```bash
+npm run setup-db
+```
+
+This will create:
+- Database indexes for optimal performance
+- Default user accounts (see below)
+- Sample questions, answers, and tags
+- Sample notifications
+
+### 4. Start Development Server
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to see the application.
+
+## 👥 Default Accounts
+
+After running the database setup, you'll have these default accounts:
+
+### Master Admin
+- **Email**: `master@stackit.com`
+- **Password**: `master123`
+- **Role**: Master Admin (full access)
+
+### Regular Admin
+- **Email**: `admin@stackit.com`
+- **Password**: `admin123`
+- **Role**: Admin (moderation access)
+
+### Demo User
+- **Email**: `user@stackit.com`
+- **Password**: `user123`
+- **Role**: Regular User
+
+## 🔧 Admin Panel Usage
+
+### Accessing Admin Panel
+1. Sign in with an admin account
+2. Click on your profile menu in the header
+3. Select "Admin Panel"
+
+### User Management
+- **View Users**: See all registered users with their roles and status
+- **Ban Users**: Permanently ban users from the platform
+- **Suspend Users**: Temporarily suspend users with custom duration
+- **Unban/Unsuspend**: Restore user access
+
+### Content Moderation
+- **Questions**: Review and delete inappropriate questions
+- **Answers**: Moderate answers and remove violations
+- **View Content**: Click "View" to see the full content
+
+### Admin Roles
+- **Master Admin**: Full access to all features
+- **Regular Admin**: Can manage users and content, but cannot manage other admins
+
+## 🎯 Key Improvements Implemented
+
+### UI/UX Enhancements
+- ✅ **InfinityFX Theme**: Complete color palette and design system
+- ✅ **Glassmorphism Effects**: Modern backdrop blur and transparency
+- ✅ **Border Radius**: Rounded corners on buttons and cards
+- ✅ **Gradient Effects**: Smooth color transitions throughout
+- ✅ **Responsive Design**: Mobile-optimized interface
+
+### Functional Improvements
+- ✅ **Independent Vote Counters**: Separate upvote/downvote displays
+- ✅ **Enhanced Search**: Debounced search with real-time results
+- ✅ **Notification System**: Real-time notifications with proper counts
+- ✅ **Answer Acceptance**: Fixed authentication for accepting answers
+- ✅ **Admin Panel**: Complete database setup and management
+
+### Technical Fixes
+- ✅ **Database Setup**: Comprehensive initialization script
+- ✅ **API Endpoints**: All notification and admin APIs implemented
+- ✅ **Authentication**: Proper session handling
+- ✅ **Error Handling**: Improved error messages and validation
 
 ## 📁 Project Structure
 
 ```
 QA_Forum/
-├── app/                    # Next.js App Router
+├── app/                    # Next.js 13+ app directory
 │   ├── api/               # API routes
 │   ├── auth/              # Authentication pages
-│   ├── questions/         # Question pages
-│   ├── tags/              # Tags page
-│   ├── profile/           # User profile
-│   └── admin-panel/       # Admin dashboard
+│   ├── questions/         # Question-related pages
+│   ├── profile/           # User profile pages
+│   └── admin-panel/       # Admin panel
 ├── components/            # Reusable components
 ├── models/               # MongoDB models
 ├── lib/                  # Utility functions
-├── types/                # TypeScript type definitions
-└── scripts/              # Setup and utility scripts
+├── scripts/              # Database setup scripts
+└── public/               # Static assets
 ```
 
-## 🔧 Configuration
+## 🎨 Theme Customization
 
-### Master Admin Setup
-The application comes with a master admin account:
-- **Email**: mohilp03437@gmail.com
-- **Password**: Parth@007
+The InfinityFX theme is implemented through:
 
-Only the master admin can:
-- Add/remove other admins
-- Access full admin privileges
-- Manage platform settings
+### Color Variables
+```css
+--primary-dark: #17153b
+--primary-medium: #2e236c
+--primary-light: #433d8b
+--accent: #c8acd6
+```
 
-### Environment Variables
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `MONGODB_URI` | MongoDB connection string | Yes |
-| `NEXTAUTH_SECRET` | NextAuth.js secret key | Yes |
-| `NEXTAUTH_URL` | Application URL | Yes |
-| `GITHUB_ID` | GitHub OAuth App ID | Optional |
-| `GITHUB_SECRET` | GitHub OAuth App Secret | Optional |
+### CSS Classes
+- `.card`: Glassmorphism card component
+- `.btn-primary`: Primary button with gradients
+- `.gradient-text`: Text with gradient effects
+- `.glass`: Glassmorphism background
+- `.glow`: Glow effects for interactive elements
 
-## 🎨 Features in Detail
+## 🚀 Deployment
 
-### Authentication
-- **NextAuth.js** integration
-- **GitHub OAuth** support
-- **Session management**
-- **Protected routes**
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push
 
-### Question Management
-- **Rich text editor** with formatting options
-- **Image upload** support (max 2 images, 1MB each)
-- **Tag system** for categorization
-- **Voting mechanism** for quality control
-
-### User Experience
-- **Dark theme** based on GitHub's design
-- **Responsive layout** for all devices
-- **Real-time notifications** for user engagement
-- **Reputation system** to encourage quality contributions
-
-### Admin Panel
-- **User management** (ban, suspend, delete)
-- **Content moderation** tools
-- **Admin role management**
-- **Platform statistics**
+### Other Platforms
+- **Netlify**: Configure build settings for Next.js
+- **Railway**: Use Railway's MongoDB integration
+- **DigitalOcean**: Deploy with App Platform
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## 🙏 Acknowledgments
+## 🆘 Support
 
-- **Next.js** team for the amazing framework
-- **Vercel** for seamless deployment
-- **GitHub** for the design inspiration
-- **MongoDB** for the database solution
-
-## 📞 Support
-
-If you have any questions or need support:
+For support and questions:
 - Create an issue in the repository
-- Contact the development team
 - Check the documentation
+- Review the admin panel guide
 
 ---
 
-**Built with ❤️ for the developer community**
+**Built with ❤️ using Next.js, MongoDB, and the InfinityFX design system**

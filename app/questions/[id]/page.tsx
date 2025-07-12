@@ -180,6 +180,11 @@ export default function QuestionPage() {
   };
 
   const handleAcceptAnswer = async (answerId: string) => {
+    if (!session) {
+      toast.error('Please sign in to accept answers');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/answers/${answerId}/accept`, {
         method: 'PUT',
@@ -249,12 +254,12 @@ export default function QuestionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d1117]">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <Header />
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="container-responsive py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#238636] mx-auto"></div>
-            <p className="mt-4 text-[#7d8590]">Loading question...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+            <p className="mt-4 text-gray-400">Loading question...</p>
           </div>
         </div>
       </div>
@@ -270,17 +275,17 @@ export default function QuestionPage() {
   const hasDownvotedQuestion = session && question.votes.downvotes.includes(session.user.id);
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <Header />
       
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="container-responsive py-8">
         {/* Question Header */}
         <div className="card mb-6">
-          <div className="p-6 border-b border-[#30363d]">
+          <div className="p-6 border-b border-white/10">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-[#f0f6fc] mb-2">{question.title}</h1>
-                <div className="flex items-center space-x-4 text-sm text-[#7d8590]">
+                <h1 className="text-3xl font-bold text-gray-100 mb-2">{question.title}</h1>
+                <div className="flex items-center space-x-4 text-sm text-gray-400">
                   <div className="flex items-center space-x-1">
                     <FiClock className="w-4 h-4" />
                     <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
@@ -305,21 +310,29 @@ export default function QuestionPage() {
               <div className="flex flex-col items-center space-y-2">
                 <button
                   onClick={() => handleVote('question', question._id, 'upvote')}
-                  className={`p-3 rounded-lg hover:bg-[#21262d] transition-github ${
-                    hasUpvotedQuestion ? 'text-[#238636] bg-[#238636]/10' : 'text-[#7d8590]'
+                  className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
+                    hasUpvotedQuestion ? 'text-green-400 bg-green-400/10' : 'text-gray-400'
                   }`}
                   disabled={!session}
                   title="Upvote"
                 >
                   <FiThumbsUp className="w-6 h-6" />
                 </button>
-                <span className="text-xl font-bold text-[#f0f6fc] min-w-[2rem] text-center">
-                  {questionVoteCount}
-                </span>
+                <div className="flex flex-col items-center space-y-1">
+                  <span className="text-sm font-medium text-green-400">
+                    {question.votes.upvotes.length}
+                  </span>
+                  <span className="text-xl font-bold text-gray-100">
+                    {questionVoteCount}
+                  </span>
+                  <span className="text-sm font-medium text-red-400">
+                    {question.votes.downvotes.length}
+                  </span>
+                </div>
                 <button
                   onClick={() => handleVote('question', question._id, 'downvote')}
-                  className={`p-3 rounded-lg hover:bg-[#21262d] transition-github ${
-                    hasDownvotedQuestion ? 'text-[#da3633] bg-[#da3633]/10' : 'text-[#7d8590]'
+                  className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
+                    hasDownvotedQuestion ? 'text-red-400 bg-red-400/10' : 'text-gray-400'
                   }`}
                   disabled={!session}
                   title="Downvote"
@@ -331,20 +344,20 @@ export default function QuestionPage() {
               {/* Content */}
               <div className="flex-1">
                 <div 
-                  className="prose max-w-none mb-6 text-[#c9d1d9] leading-relaxed"
+                  className="prose max-w-none mb-6 text-gray-100 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: question.content }}
                 />
 
                 {/* Images */}
                 {question.images && question.images.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-[#c9d1d9] mb-3 flex items-center">
+                    <h4 className="text-sm font-medium text-gray-100 mb-3 flex items-center">
                       <FiImage className="w-4 h-4 mr-2" />
                       Attached Images
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {question.images.map((image, index) => (
-                        <div key={index} className="border border-[#30363d] rounded-lg overflow-hidden">
+                        <div key={index} className="border border-white/10 rounded-xl overflow-hidden">
                           <img
                             src={image}
                             alt={`Question image ${index + 1}`}
@@ -370,14 +383,14 @@ export default function QuestionPage() {
                 </div>
 
                 {/* Author Info */}
-                <div className="flex items-center justify-between pt-4 border-t border-[#30363d]">
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#238636] to-[#2ea043] rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
                       <FiUser className="text-white w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-medium text-[#f0f6fc]">{question.author.username}</div>
-                      <div className="text-sm text-[#7d8590]">Reputation: {question.author.reputation}</div>
+                      <div className="font-medium text-gray-100">{question.author.username}</div>
+                      <div className="text-sm text-gray-400">Reputation: {question.author.reputation}</div>
                     </div>
                   </div>
                 </div>
@@ -388,19 +401,19 @@ export default function QuestionPage() {
 
         {/* Answers Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-[#f0f6fc] mb-6">
+          <h2 className="text-2xl font-bold text-gray-100 mb-6">
             {answers.length} Answer{answers.length !== 1 ? 's' : ''}
           </h2>
 
           {answers.length === 0 ? (
             <div className="card p-8 text-center">
-              <FiMessageSquare className="mx-auto h-12 w-12 text-[#7d8590] mb-4" />
-              <h3 className="text-lg font-medium text-[#f0f6fc] mb-2">No answers yet</h3>
-              <p className="text-[#7d8590] mb-4">Be the first to answer this question!</p>
+              <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-100 mb-2">No answers yet</h3>
+              <p className="text-gray-400 mb-4">Be the first to answer this question!</p>
               {!session && (
                 <button 
                   onClick={() => router.push('/auth/signin')}
-                  className="btn-primary"
+                  className="btn btn-primary"
                 >
                   Sign in to Answer
                 </button>
@@ -418,7 +431,7 @@ export default function QuestionPage() {
                   <div
                     key={answer._id}
                     className={`card ${
-                      answer.isAccepted ? 'border-2 border-[#238636] bg-[#238636]/5' : ''
+                      answer.isAccepted ? 'border-2 border-green-500 bg-green-500/5' : ''
                     }`}
                   >
                     <div className="p-6">
@@ -427,21 +440,29 @@ export default function QuestionPage() {
                         <div className="flex flex-col items-center space-y-2">
                           <button
                             onClick={() => handleVote('answer', answer._id, 'upvote')}
-                            className={`p-3 rounded-lg hover:bg-[#21262d] transition-github ${
-                              hasUpvoted ? 'text-[#238636] bg-[#238636]/10' : 'text-[#7d8590]'
+                            className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
+                              hasUpvoted ? 'text-green-400 bg-green-400/10' : 'text-gray-400'
                             }`}
                             disabled={!session}
                             title="Upvote"
                           >
                             <FiThumbsUp className="w-6 h-6" />
                           </button>
-                          <span className="text-xl font-bold text-[#f0f6fc] min-w-[2rem] text-center">
-                            {voteCount}
-                          </span>
+                          <div className="flex flex-col items-center space-y-1">
+                            <span className="text-sm font-medium text-green-400">
+                              {answer.votes.upvotes.length}
+                            </span>
+                            <span className="text-xl font-bold text-gray-100">
+                              {voteCount}
+                            </span>
+                            <span className="text-sm font-medium text-red-400">
+                              {answer.votes.downvotes.length}
+                            </span>
+                          </div>
                           <button
                             onClick={() => handleVote('answer', answer._id, 'downvote')}
-                            className={`p-3 rounded-lg hover:bg-[#21262d] transition-github ${
-                              hasDownvoted ? 'text-[#da3633] bg-[#da3633]/10' : 'text-[#7d8590]'
+                            className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
+                              hasDownvoted ? 'text-red-400 bg-red-400/10' : 'text-gray-400'
                             }`}
                             disabled={!session}
                             title="Downvote"
@@ -453,7 +474,7 @@ export default function QuestionPage() {
                           {session && question.author._id === session.user.id && !question.isAccepted && (
                             <button
                               onClick={() => handleAcceptAnswer(answer._id)}
-                              className="p-3 text-[#238636] hover:bg-[#238636]/10 rounded-lg transition-github"
+                              className="p-3 text-green-400 hover:bg-green-400/10 rounded-xl transition-all duration-300"
                               title="Accept this answer"
                             >
                               <FiCheck className="w-6 h-6" />
@@ -461,7 +482,7 @@ export default function QuestionPage() {
                           )}
                           
                           {answer.isAccepted && (
-                            <div className="p-3 text-[#238636] bg-[#238636]/10 rounded-lg">
+                            <div className="p-3 text-green-400 bg-green-400/10 rounded-xl">
                               <FiCheck className="w-6 h-6" />
                             </div>
                           )}
@@ -470,20 +491,20 @@ export default function QuestionPage() {
                         {/* Answer Content */}
                         <div className="flex-1">
                           <div 
-                            className="prose max-w-none mb-4 text-[#c9d1d9] leading-relaxed"
+                            className="prose max-w-none mb-4 text-gray-100 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: answer.content }}
                           />
 
                           {/* Answer Images */}
                           {answer.images && answer.images.length > 0 && (
                             <div className="mb-4">
-                              <h4 className="text-sm font-medium text-[#c9d1d9] mb-3 flex items-center">
+                              <h4 className="text-sm font-medium text-gray-100 mb-3 flex items-center">
                                 <FiImage className="w-4 h-4 mr-2" />
                                 Attached Images
                               </h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {answer.images.map((image, index) => (
-                                  <div key={index} className="border border-[#30363d] rounded-lg overflow-hidden">
+                                  <div key={index} className="border border-white/10 rounded-xl overflow-hidden">
                                     <img
                                       src={image}
                                       alt={`Answer image ${index + 1}`}
@@ -496,25 +517,25 @@ export default function QuestionPage() {
                           )}
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between pt-4 border-t border-[#30363d]">
+                          <div className="flex items-center justify-between pt-4 border-t border-white/10">
                             <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-[#1f6feb] to-[#388bfd] rounded-full flex items-center justify-center">
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                                 <FiUser className="text-white w-4 h-4" />
                               </div>
                               <div>
-                                <div className="font-medium text-[#f0f6fc]">{answer.author.username}</div>
-                                <div className="text-sm text-[#7d8590]">Reputation: {answer.author.reputation}</div>
+                                <div className="font-medium text-gray-100">{answer.author.username}</div>
+                                <div className="text-sm text-gray-400">Reputation: {answer.author.reputation}</div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <div className="text-sm text-[#7d8590]">
+                              <div className="text-sm text-gray-400">
                                 {formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}
                               </div>
                               {canEdit && (
                                 <div className="flex items-center space-x-2">
                                   <button
                                     onClick={() => handleDeleteAnswer(answer._id)}
-                                    className="p-1 text-[#da3633] hover:bg-[#da3633]/10 rounded transition-github"
+                                    className="p-1 text-red-400 hover:bg-red-400/10 rounded transition-all duration-300"
                                     title="Delete answer"
                                   >
                                     <FiTrash2 className="w-4 h-4" />
@@ -536,7 +557,7 @@ export default function QuestionPage() {
         {/* Answer Form */}
         {session ? (
           <div className="card p-6">
-            <h3 className="text-xl font-bold text-[#f0f6fc] mb-4">Your Answer</h3>
+            <h3 className="text-xl font-bold text-gray-100 mb-4">Your Answer</h3>
             <form onSubmit={handleSubmitAnswer}>
               <RichTextEditor
                 value={answerContent}
@@ -547,7 +568,7 @@ export default function QuestionPage() {
               
               {/* Image Upload */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[#c9d1d9] mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Attach Images (optional)
                 </label>
                 <input
@@ -567,12 +588,12 @@ export default function QuestionPage() {
                         <img
                           src={image}
                           alt={`Preview ${index + 1}`}
-                          className="w-16 h-16 object-cover rounded border border-[#30363d]"
+                          className="w-16 h-16 object-cover rounded-xl border border-white/10"
                         />
                         <button
                           type="button"
                           onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
-                          className="absolute -top-1 -right-1 bg-[#da3633] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-[#f85149] transition-github"
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
                         >
                           ×
                         </button>
@@ -586,7 +607,7 @@ export default function QuestionPage() {
                 <button
                   type="submit"
                   disabled={submittingAnswer || !answerContent.trim()}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submittingAnswer ? 'Posting...' : 'Post Answer'}
                 </button>
@@ -595,11 +616,11 @@ export default function QuestionPage() {
           </div>
         ) : (
           <div className="card p-6 text-center">
-            <h3 className="text-xl font-bold text-[#f0f6fc] mb-2">Want to answer this question?</h3>
-            <p className="text-[#7d8590] mb-4">Sign in to post your answer and help others.</p>
+            <h3 className="text-xl font-bold text-gray-100 mb-2">Want to answer this question?</h3>
+            <p className="text-gray-400 mb-4">Sign in to post your answer and help others.</p>
             <button 
               onClick={() => router.push('/auth/signin')}
-              className="btn-primary"
+              className="btn btn-primary"
             >
               Sign In to Answer
             </button>

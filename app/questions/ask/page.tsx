@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiUpload, FiX, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiX, FiAlertCircle, FiTag, FiImage, FiEdit3 } from 'react-icons/fi';
 import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
@@ -164,10 +164,10 @@ export default function AskQuestionPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#0d1117]">
+      <div className="min-h-screen bg-black">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="text-center text-[#c9d1d9]">Loading...</div>
+        <div className="container-responsive py-8">
+          <div className="text-center text-gray-300">Loading...</div>
         </div>
       </div>
     );
@@ -175,16 +175,16 @@ export default function AskQuestionPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#0d1117]">
+      <div className="min-h-screen bg-black">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="card text-center">
-            <FiAlertCircle className="mx-auto h-12 w-12 text-[#7d8590] mb-4" />
-            <h2 className="text-xl font-semibold text-[#f0f6fc] mb-2">Sign in required</h2>
-            <p className="text-[#c9d1d9] mb-4">
+        <div className="container-responsive py-8">
+          <div className="card text-center max-w-md mx-auto">
+            <FiAlertCircle className="mx-auto h-12 w-12 text-purple-500 mb-4" />
+            <h2 className="text-xl font-semibold gradient-text mb-2">Sign in required</h2>
+            <p className="text-gray-300 mb-4">
               You need to be signed in to ask a question.
             </p>
-            <Link href="/auth/signin?callbackUrl=/questions/ask" className="btn btn-primary">
+            <Link href="/auth/signin?callbackUrl=/questions/ask" className="btn btn-primary text-lg">
               Sign In
             </Link>
           </div>
@@ -194,21 +194,21 @@ export default function AskQuestionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="min-h-screen bg-black">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="container-responsive py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#f0f6fc] mb-2">Ask a Question</h1>
-          <p className="text-[#c9d1d9]">
+          <h1 className="text-4xl font-bold gradient-text mb-2">Ask a Question</h1>
+          <p className="text-gray-300 text-lg">
             Share your knowledge and help others by asking a question.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
           {/* Title */}
-          <div className="card">
-            <label htmlFor="title" className="block text-sm font-medium text-[#c9d1d9] mb-2">
+          <div className="card p-6">
+            <label htmlFor="title" className="block text-sm font-medium text-[#c8acd6] mb-2">
               Title *
             </label>
             <input
@@ -217,18 +217,18 @@ export default function AskQuestionPage() {
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="What's your question? Be specific."
-              className="input"
+              className="input text-lg"
               maxLength={200}
               required
             />
-            <p className="mt-1 text-sm text-[#7d8590]">
+            <p className="mt-1 text-sm text-[#433d8b]">
               {formData.title.length}/200 characters
             </p>
           </div>
 
           {/* Short Description */}
-          <div className="card">
-            <label htmlFor="shortDescription" className="block text-sm font-medium text-[#c9d1d9] mb-2">
+          <div className="card p-6">
+            <label htmlFor="shortDescription" className="block text-sm font-medium text-[#c8acd6] mb-2">
               Short Description *
             </label>
             <textarea
@@ -236,122 +236,134 @@ export default function AskQuestionPage() {
               value={formData.shortDescription}
               onChange={(e) => handleInputChange('shortDescription', e.target.value)}
               placeholder="Brief summary of your question (max 200 characters)"
-              className="input h-20 resize-none"
+              className="textarea h-20 text-lg"
               maxLength={200}
               required
             />
-            <p className="mt-1 text-sm text-[#7d8590]">
+            <p className="mt-1 text-sm text-[#433d8b]">
               {formData.shortDescription.length}/200 characters
             </p>
           </div>
 
           {/* Content */}
-          <div className="card">
-            <label htmlFor="content" className="block text-sm font-medium text-[#c9d1d9] mb-2">
-              Detailed Description *
+          <div className="card p-6">
+            <label htmlFor="content" className="block text-sm font-medium text-[#c8acd6] mb-2">
+              Detailed Question *
             </label>
             <RichTextEditor
               value={formData.content}
-              onChange={(content) => handleInputChange('content', content)}
-              placeholder="Provide detailed information about your question..."
-              className="min-h-48"
+              onChange={(value) => handleInputChange('content', value)}
+              placeholder="Provide detailed information about your question. Include code examples, error messages, and any relevant context."
             />
           </div>
 
           {/* Tags */}
-          <div className="card">
-            <label htmlFor="tags" className="block text-sm font-medium text-[#c9d1d9] mb-2">
-              Tags * (max 5)
+          <div className="card p-6">
+            <label htmlFor="tags" className="block text-sm font-medium text-[#c8acd6] mb-2">
+              Tags * (up to 5)
             </label>
-            <input
-              type="text"
-              id="tags"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagInput}
-              placeholder="Type tags and press Enter or comma (e.g., javascript, react)"
-              className="input"
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="tag flex items-center gap-1"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="hover:text-red-600"
-                  >
-                    <FiX className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <p className="mt-1 text-sm text-[#7d8590]">
-              {formData.tags.length}/5 tags
-            </p>
-          </div>
-
-          {/* Images */}
-          <div className="card">
-            <label className="block text-sm font-medium text-[#c9d1d9] mb-2">
-              Images (optional, max 2, 1MB each)
-            </label>
-            <div className="border-2 border-dashed border-[#30363d] rounded-lg p-6 text-center">
+            <div className="space-y-3">
               <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-                id="image-upload"
+                type="text"
+                id="tags"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagInput}
+                placeholder="Type tags and press Enter or comma (e.g., javascript, react, nodejs)"
+                className="input text-lg"
               />
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer flex flex-col items-center"
-              >
-                <FiUpload className="w-8 h-8 text-[#7d8590] mb-2" />
-                <span className="text-sm text-[#c9d1d9]">
-                  Click to upload images or drag and drop
-                </span>
-              </label>
+              
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag) => (
+                    <span key={tag} className="tag">
+                      <FiTag className="w-3 h-3 mr-1" />
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-2 hover:text-red-400 transition-colors duration-200"
+                      >
+                        <FiX className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-sm text-[#433d8b]">
+                {formData.tags.length}/5 tags
+              </p>
             </div>
-            
-            {imagePreview.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {imagePreview.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 bg-[#da3633] text-white rounded-full p-1 hover:bg-[#f85149] transition-github"
-                    >
-                      <FiX className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Submit */}
+          {/* Image Upload */}
+          <div className="card p-6">
+            <label className="block text-sm font-medium text-[#c8acd6] mb-2">
+              Images (optional, max 2)
+            </label>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <label className="btn btn-outline cursor-pointer text-lg">
+                  <FiUpload className="w-4 h-4 mr-2" />
+                  Choose Images
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+                <span className="text-sm text-[#433d8b]">
+                  {formData.images.length}/2 images
+                </span>
+              </div>
+              
+              {imagePreview.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                  {imagePreview.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border border-[#433d8b]/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                      >
+                        <FiX className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Submit Button */}
           <div className="flex justify-end space-x-4">
-            <Link href="/questions" className="btn btn-secondary">
+            <Link href="/questions" className="btn btn-outline text-lg">
               Cancel
             </Link>
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary"
+              className="btn btn-primary text-lg focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Posting...' : 'Post Question'}
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Posting...
+                </>
+              ) : (
+                <>
+                  <FiEdit3 className="w-4 h-4 mr-2" />
+                  Post Question
+                </>
+              )}
             </button>
           </div>
         </form>

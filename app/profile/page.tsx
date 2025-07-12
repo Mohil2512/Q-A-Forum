@@ -80,10 +80,10 @@ export default function ProfilePage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please sign in to view your profile</h1>
-          <Link href="/auth/signin" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          <h1 className="text-2xl font-bold text-[#c8acd6] mb-4">Please sign in to view your profile</h1>
+          <Link href="/auth/signin" className="btn btn-primary px-6 py-2 text-lg">
             Sign In
           </Link>
         </div>
@@ -92,97 +92,89 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
-              <FaUser className="text-white text-2xl" />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{session.user.username}</h1>
-              <p className="text-gray-600">{session.user.email}</p>
-              <div className="flex items-center space-x-4 mt-2">
-                <div className="flex items-center space-x-1">
-                  <FaTrophy className="text-yellow-500" />
-                  <span className="text-sm text-gray-600">Reputation: {calculateReputation()}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <FaCalendar className="text-gray-400" />
-                  <span className="text-sm text-gray-600">Member since {new Date().toLocaleDateString()}</span>
-                </div>
+        <div className="card p-6 mb-6 flex items-center space-x-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#433d8b] to-[#c8acd6] rounded-full flex items-center justify-center shadow-glow">
+            <FaUser className="text-[#c8acd6] text-2xl" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold gradient-text">{session.user.username}</h1>
+            <p className="text-[#c8acd6]">{session.user.email}</p>
+            <div className="flex items-center space-x-4 mt-2">
+              <div className="flex items-center space-x-1">
+                <FaTrophy className="text-yellow-500" />
+                <span className="text-sm text-[#c8acd6]">Reputation: {calculateReputation()}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <FaCalendar className="text-[#433d8b]" />
+                <span className="text-sm text-[#c8acd6]">Member since {new Date().toLocaleDateString()}</span>
               </div>
             </div>
-            <Link 
-              href="/profile/edit" 
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-            >
-              <FaEdit />
-              <span>Edit Profile</span>
-            </Link>
           </div>
+          <Link 
+            href="/profile/edit" 
+            className="btn btn-primary flex items-center space-x-2 text-lg"
+          >
+            <FaEdit />
+            <span>Edit Profile</span>
+          </Link>
         </div>
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FaQuestion className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{questions.length}</p>
-                <p className="text-gray-600">Questions</p>
-              </div>
+          <div className="card p-6 flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#433d8b] to-[#c8acd6] bg-opacity-20 rounded-lg flex items-center justify-center">
+              <FaQuestion className="text-[#c8acd6]" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold gradient-text">{questions.length}</p>
+              <p className="text-[#c8acd6]">Questions</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FaComment className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{answers.length}</p>
-                <p className="text-gray-600">Answers</p>
-              </div>
+          <div className="card p-6 flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#433d8b] to-[#c8acd6] bg-opacity-20 rounded-lg flex items-center justify-center">
+              <FaComment className="text-[#c8acd6]" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold gradient-text">{answers.length}</p>
+              <p className="text-[#c8acd6]">Answers</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <FaTrophy className="text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {answers.filter(a => a.isAccepted).length}
-                </p>
-                <p className="text-gray-600">Accepted</p>
-              </div>
+          <div className="card p-6 flex items-center space-x-3">
+            <div className="w-12 h-12 bg-yellow-100 bg-opacity-20 rounded-lg flex items-center justify-center">
+              <FaTrophy className="text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold gradient-text">
+                {answers.filter(a => a.isAccepted).length}
+              </p>
+              <p className="text-[#c8acd6]">Accepted</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="border-b border-gray-200">
+        <div className="card">
+          <div className="border-b border-[#433d8b]">
             <nav className="flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('questions')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-lg ${
                   activeTab === 'questions'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#c8acd6] text-[#c8acd6]'
+                    : 'border-transparent text-[#433d8b] hover:text-[#c8acd6] hover:border-[#433d8b]'
                 }`}
               >
                 Questions ({questions.length})
               </button>
               <button
                 onClick={() => setActiveTab('answers')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-lg ${
                   activeTab === 'answers'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#c8acd6] text-[#c8acd6]'
+                    : 'border-transparent text-[#433d8b] hover:text-[#c8acd6] hover:border-[#433d8b]'
                 }`}
               >
                 Answers ({answers.length})
@@ -193,20 +185,20 @@ export default function ProfilePage() {
           <div className="p-6">
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#c8acd6] mx-auto"></div>
+                <p className="mt-2 text-[#c8acd6]">Loading...</p>
               </div>
             ) : activeTab === 'questions' ? (
               <div className="space-y-4">
                 {questions.length === 0 ? (
                   <div className="text-center py-8">
-                    <FaQuestion className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No questions yet</h3>
-                    <p className="mt-1 text-sm text-gray-500">Get started by asking your first question.</p>
+                    <FaQuestion className="mx-auto h-12 w-12 text-[#433d8b]" />
+                    <h3 className="mt-2 text-lg font-medium text-[#c8acd6]">No questions yet</h3>
+                    <p className="mt-1 text-md text-[#c8acd6]">Get started by asking your first question.</p>
                     <div className="mt-6">
                       <Link
                         href="/questions/ask"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="btn btn-primary px-4 py-2 text-lg"
                       >
                         Ask Question
                       </Link>
@@ -214,14 +206,14 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   questions.map((question) => (
-                    <div key={question._id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={question._id} className="card p-4">
                       <Link href={`/questions/${question._id}`} className="block">
-                        <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 mb-2">
+                        <h3 className="text-lg font-medium gradient-text mb-2">
                           {question.title}
                         </h3>
                       </Link>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{question.content}</p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <p className="text-[#c8acd6] text-md mb-3 line-clamp-2">{question.content}</p>
+                      <div className="flex items-center justify-between text-md text-[#433d8b]">
                         <div className="flex items-center space-x-4">
                           <span>{question.views} views</span>
                           <span>{question.answers} answers</span>
@@ -237,13 +229,13 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 {answers.length === 0 ? (
                   <div className="text-center py-8">
-                    <FaComment className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No answers yet</h3>
-                    <p className="mt-1 text-sm text-gray-500">Start helping others by answering questions.</p>
+                    <FaComment className="mx-auto h-12 w-12 text-[#433d8b]" />
+                    <h3 className="mt-2 text-lg font-medium text-[#c8acd6]">No answers yet</h3>
+                    <p className="mt-1 text-md text-[#c8acd6]">Start helping others by answering questions.</p>
                     <div className="mt-6">
                       <Link
                         href="/questions"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="btn btn-primary px-4 py-2 text-lg"
                       >
                         Browse Questions
                       </Link>
@@ -251,19 +243,17 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   answers.map((answer) => (
-                    <div key={answer._id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={answer._id} className="card p-4">
                       <Link href={`/questions/${answer.question._id}`} className="block">
-                        <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 mb-2">
+                        <h3 className="text-lg font-medium gradient-text mb-2">
                           {answer.question.title}
                         </h3>
                       </Link>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{answer.content}</p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <p className="text-[#c8acd6] text-md mb-3 line-clamp-2">{answer.content}</p>
+                      <div className="flex items-center justify-between text-md text-[#433d8b]">
                         <div className="flex items-center space-x-4">
+                          <span>{answer.isAccepted ? 'Accepted' : 'Not accepted'}</span>
                           <span>{answer.votes.upvotes.length - answer.votes.downvotes.length} votes</span>
-                          {answer.isAccepted && (
-                            <span className="text-blue-600 font-medium">✓ Accepted</span>
-                          )}
                         </div>
                         <span>{new Date(answer.createdAt).toLocaleDateString()}</span>
                       </div>
