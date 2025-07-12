@@ -24,6 +24,7 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 interface User {
   _id: string;
@@ -279,11 +280,12 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-black">
+        <Header />
         <div className="container-responsive py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-            <p className="mt-4 text-gray-400">Loading admin panel...</p>
+            <p className="mt-4 text-gray-300">Loading admin panel...</p>
           </div>
         </div>
       </div>
@@ -292,6 +294,7 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-black">
+      <Header />
       <div className="container-responsive py-8">
         {/* Header */}
         <div className="mb-8">

@@ -198,7 +198,7 @@ export default function ProfilePage() {
                     <div className="mt-6">
                       <Link
                         href="/questions/ask"
-                        className="btn btn-primary px-4 py-2 text-lg"
+                        className="btn btn-primary px-6 py-2 text-lg whitespace-nowrap"
                       >
                         Ask Question
                       </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,6 +28,32 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Close profile dropdown when notification dropdown opens
+  const handleNotificationToggle = () => {
+    setIsProfileDropdownOpen(false);
+  };
+
+  // Close notification dropdown when profile dropdown opens
+  const handleProfileToggle = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
 
   // Debounced search
   useEffect(() => {
@@ -109,9 +135,9 @@ export default function Header() {
             {session && (
               <Link 
                 href="/questions/ask" 
-                className="btn btn-primary text-sm px-4 py-2"
+                className="btn btn-primary text-sm px-6 py-2 whitespace-nowrap"
               >
-                <FiPlus className="w-4 h-4 mr-1" />
+                <FiPlus className="w-4 h-4 mr-1 inline" />
                 Ask Question
               </Link>
             )}
@@ -160,11 +186,11 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             {session ? (
               <>
-                <NotificationDropdown />
+                <NotificationDropdown onClose={handleNotificationToggle} />
                 
-                <div className="relative">
+                <div className="relative" ref={profileDropdownRef}>
                   <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onClick={handleProfileToggle}
                     className="flex items-center space-x-2 p-2 rounded-xl hover:bg-white/5 transition-colors duration-300"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -174,13 +200,13 @@ export default function Header() {
                   </button>
 
                   {/* User Dropdown */}
-                  {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden z-50">
                       <div className="py-2">
                         <Link
                           href="/profile"
                           className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
-                          onClick={() => setIsMenuOpen(false)}
+                          onClick={() => setIsProfileDropdownOpen(false)}
                         >
                           <FiUser className="w-4 h-4 mr-3" />
                           Profile
@@ -189,7 +215,7 @@ export default function Header() {
                           <Link
                             href="/admin-panel"
                             className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
-                            onClick={() => setIsMenuOpen(false)}
+                            onClick={() => setIsProfileDropdownOpen(false)}
                           >
                             <FiSettings className="w-4 h-4 mr-3" />
                             Admin Panel

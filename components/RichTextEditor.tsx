@@ -45,12 +45,6 @@ export default function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
 
-  useEffect(() => {
-    if (editorRef.current && !isComposing) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value, isComposing]);
-
   const execCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
@@ -63,6 +57,14 @@ export default function RichTextEditor({
       if (newValue !== value) {
         onChange(newValue);
       }
+    }
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    // Don't update during composition (IME input)
+    if (!isComposing) {
+      const newValue = e.currentTarget.innerHTML;
+      onChange(newValue);
     }
   };
 
@@ -145,9 +147,13 @@ export default function RichTextEditor({
     setIsComposing(true);
   };
 
-  const handleCompositionEnd = () => {
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLDivElement>) => {
     setIsComposing(false);
-    updateValue();
+    // Update value after composition ends
+    setTimeout(() => {
+      const newValue = e.currentTarget.innerHTML;
+      onChange(newValue);
+    }, 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -157,6 +163,13 @@ export default function RichTextEditor({
       updateValue();
     }
   };
+
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editorRef.current && !isComposing && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value, isComposing]);
 
   return (
     <div className={`border border-[#30363d] rounded-lg bg-[#0d1117] ${className}`}>
@@ -289,7 +302,7 @@ export default function RichTextEditor({
       <div
         ref={editorRef}
         contentEditable
-        onInput={updateValue}
+        onInput={handleInput}
         onPaste={handlePaste}
         onBlur={updateValue}
         onCompositionStart={handleCompositionStart}
@@ -298,6 +311,7 @@ export default function RichTextEditor({
         className="p-4 min-h-[200px] focus:outline-none text-[#c9d1d9] prose"
         style={{ minHeight: '200px' }}
         data-placeholder={placeholder}
+        suppressContentEditableWarning={true}
       />
 
       {/* Link Dialog */}

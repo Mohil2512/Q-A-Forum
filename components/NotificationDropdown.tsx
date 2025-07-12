@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FiX, FiCheck, FiBell } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,10 +26,25 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchNotifications();
     fetchNotificationCount();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const fetchNotifications = async () => {
@@ -91,10 +106,17 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
     onClose?.();
   };
 
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+    if (isOpen) {
+      onClose?.();
+    }
+  };
+
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="p-2 text-[#c8acd6] hover:text-white transition-colors duration-300 relative"
       >
         <FiBell className="w-5 h-5" />
@@ -106,7 +128,7 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 card z-50">
+        <div className="absolute right-0 mt-2 w-80 card z-50" ref={dropdownRef}>
           <div className="flex items-center justify-between p-4 border-b border-[#433d8b]/30">
             <h3 className="text-lg font-semibold gradient-text">Notifications</h3>
             <div className="flex items-center space-x-2">

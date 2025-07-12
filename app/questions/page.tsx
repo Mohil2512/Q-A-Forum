@@ -196,9 +196,9 @@ export default function QuestionsPage() {
           {session && (
             <Link 
               href="/questions/ask" 
-              className="btn btn-primary mt-4 lg:mt-0 text-lg"
+              className="btn btn-primary mt-4 lg:mt-0 text-lg px-8 py-3 whitespace-nowrap"
             >
-              <FiPlus className="w-4 h-4 mr-2" />
+              <FiPlus className="w-4 h-4 mr-2 inline" />
               Ask Question
             </Link>
           )}
@@ -282,7 +282,7 @@ export default function QuestionsPage() {
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
-                className="btn btn-outline w-full text-lg"
+                className="btn btn-outline w-full text-lg flex items-center justify-center"
               >
                 <FiFilter className="w-4 h-4 mr-2" />
                 Clear Filters
@@ -322,8 +322,8 @@ export default function QuestionsPage() {
               <h3 className="text-xl font-medium text-[#c8acd6] mb-2">No questions found</h3>
               <p className="text-[#c8acd6] mb-6">Try adjusting your search or filters.</p>
               {session && (
-                <Link href="/questions/ask" className="btn btn-primary text-lg">
-                  <FiPlus className="w-4 h-4 mr-2" />
+                <Link href="/questions/ask" className="btn btn-primary text-lg px-8 py-3 whitespace-nowrap">
+                  <FiPlus className="w-4 h-4 mr-2 inline" />
                   Ask the First Question
                 </Link>
               )}

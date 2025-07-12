@@ -15,13 +15,6 @@ export default async function Home() {
         
         <div className="container-responsive py-20 relative z-10">
           <div className="text-center">
-            <div className="mb-8">
-              <div className="inline-flex items-center px-6 py-3 rounded-full bg-gray-900/50 backdrop-blur-sm border border-purple-500/30 text-white text-sm font-medium mb-6">
-                <FaRocket className="mr-2" />
-                New Platform Launch
-              </div>
-            </div>
-            
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="gradient-text">StackIt</span>
               <br />
@@ -37,25 +30,25 @@ export default async function Home() {
               {session ? (
                 <Link 
                   href="/questions/ask" 
-                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                  className="btn btn-primary text-lg px-12 py-4 glow-purple whitespace-nowrap"
                 >
-                  <FaQuestion className="mr-2" />
+                  <FaQuestion className="mr-2 inline" />
                   Ask a Question
                 </Link>
               ) : (
                 <Link 
                   href="/auth/signin" 
-                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                  className="btn btn-primary text-lg px-12 py-4 glow-purple whitespace-nowrap"
                 >
-                  <FaRocket className="mr-2" />
+                  <FaRocket className="mr-2 inline" />
                   Get Started
                 </Link>
               )}
               <Link 
                 href="/questions" 
-                className="btn btn-outline text-lg px-8 py-4"
+                className="btn btn-outline text-lg px-12 py-4 whitespace-nowrap"
               >
-                <FaSearch className="mr-2" />
+                <FaSearch className="mr-2 inline" />
                 Explore Questions
               </Link>
             </div>
@@ -192,25 +185,25 @@ export default async function Home() {
               {session ? (
                 <Link 
                   href="/questions/ask" 
-                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                  className="btn btn-primary text-lg px-12 py-4 glow-purple whitespace-nowrap"
                 >
-                  <FaQuestion className="mr-2" />
+                  <FaQuestion className="mr-2 inline" />
                   Ask Your First Question
                 </Link>
               ) : (
                 <Link 
                   href="/auth/signup" 
-                  className="btn btn-primary text-lg px-8 py-4 glow-purple"
+                  className="btn btn-primary text-lg px-12 py-4 glow-purple whitespace-nowrap"
                 >
-                  <FaRocket className="mr-2" />
+                  <FaRocket className="mr-2 inline" />
                   Create Account
                 </Link>
               )}
               <Link 
                 href="/questions" 
-                className="btn btn-outline text-lg px-8 py-4"
+                className="btn btn-outline text-lg px-12 py-4 whitespace-nowrap"
               >
-                <FaSearch className="mr-2" />
+                <FaSearch className="mr-2 inline" />
                 Explore Questions
               </Link>
             </div>
