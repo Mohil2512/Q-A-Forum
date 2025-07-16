@@ -9,6 +9,11 @@ export interface IUser extends Document {
   reputation: number;
   avatar?: string;
   bio?: string;
+  displayName?: string;
+  github?: string;
+  linkedin?: string;
+  twitter?: string;
+  location?: string;
   isBanned: boolean;
   suspendedUntil?: Date;
   suspensionReason?: string;
@@ -17,6 +22,13 @@ export interface IUser extends Document {
   acceptedAnswers: number;
   createdAt: Date;
   updatedAt: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: number;
+  phoneCountry?: string;
+  phoneNumber?: string;
+  oauthProvider?: string;
+  provider?: string;
+  providerId?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -38,8 +50,20 @@ const userSchema = new Schema<IUser>({
   },
   password: {
     type: String,
-    required: true,
+    required: function() {
+      // Only require password if not using OAuth
+      return !this.oauthProvider;
+    },
     minlength: 6,
+  },
+  oauthProvider: {
+    type: String, // e.g., 'google', 'github'
+  },
+  provider: {
+    type: String, // e.g., 'google', 'github'
+  },
+  providerId: {
+    type: String, // e.g., '112939889456037758176'
   },
   role: {
     type: String,
@@ -56,6 +80,31 @@ const userSchema = new Schema<IUser>({
   bio: {
     type: String,
     maxlength: 500,
+  },
+  displayName: {
+    type: String,
+    trim: true,
+    maxlength: 50,
+  },
+  github: {
+    type: String,
+    trim: true,
+    maxlength: 200,
+  },
+  linkedin: {
+    type: String,
+    trim: true,
+    maxlength: 200,
+  },
+  twitter: {
+    type: String,
+    trim: true,
+    maxlength: 200,
+  },
+  location: {
+    type: String,
+    trim: true,
+    maxlength: 100,
   },
   isBanned: {
     type: Boolean,
@@ -79,6 +128,21 @@ const userSchema = new Schema<IUser>({
   acceptedAnswers: {
     type: Number,
     default: 0,
+  },
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpires: {
+    type: Number,
+  },
+  phoneCountry: {
+    type: String,
+    trim: true,
+  },
+  phoneNumber: {
+    type: String,
+    trim: true,
+    match: [/^\d{10}$/, 'Phone number must be 10 digits'],
   },
 }, {
   timestamps: true,

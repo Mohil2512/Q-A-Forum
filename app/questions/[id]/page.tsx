@@ -20,6 +20,8 @@ import {
 import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
+import { v4 as uuidv4 } from 'uuid';
+import Modal from '@/components/Modal';
 
 interface Question {
   _id: string;
@@ -71,6 +73,19 @@ export default function QuestionPage() {
   const [answerImages, setAnswerImages] = useState<string[]>([]);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Anonymous ID logic
+  const [anonUserId, setAnonUserId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!session) {
+      let stored = localStorage.getItem('anonUserId');
+      if (!stored) {
+        stored = uuidv4();
+        localStorage.setItem('anonUserId', stored);
+      }
+      setAnonUserId(stored);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (id) {
@@ -136,8 +151,8 @@ export default function QuestionPage() {
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session) {
-      toast.error('Please sign in to answer');
+    if (!session && !anonUserId) {
+      toast.error('Anonymous ID not available. Please refresh and try again.');
       return;
     }
 
@@ -158,6 +173,7 @@ export default function QuestionPage() {
           content: answerContent,
           questionId: id,
           images: answerImages,
+          ...(session ? {} : { anonUserId }),
         }),
       });
 
@@ -208,20 +224,25 @@ export default function QuestionPage() {
   };
 
   const handleDeleteAnswer = async (answerId: string) => {
+    if (!session && !anonUserId) {
+      toast.error('Anonymous ID not available. Please refresh and try again.');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this answer?')) {
       return;
     }
-
     try {
       const response = await fetch(`/api/answers/${answerId}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: session ? undefined : JSON.stringify({ anonUserId }),
       });
-
       if (response.ok) {
         setAnswers(prev => prev.filter(answer => answer._id !== answerId));
         toast.success('Answer deleted successfully');
       } else {
-        toast.error('Failed to delete answer');
+        const error = await response.json();
+        toast.error(error.error || 'Failed to delete answer');
       }
     } catch (error) {
       console.error('Error deleting answer:', error);
@@ -250,6 +271,99 @@ export default function QuestionPage() {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
     }
+  };
+
+  // Helper to get author id as string
+  const getAuthorId = (author: any) => typeof author === 'string' ? author : author?._id;
+  // Helper to check if current user (session or anon) can edit/delete a post
+  const canEditOrDelete = (author: any) => {
+    const authorId = getAuthorId(author);
+    if (session && session.user.id === authorId) return true;
+    if (!session && anonUserId && authorId === anonUserId) return true;
+    return false;
+  };
+
+  const handleDeleteQuestion = async () => {
+    if (!session && !anonUserId) {
+      toast.error('Anonymous ID not available. Please refresh and try again.');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete this question?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/questions/${id}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: session ? undefined : JSON.stringify({ anonUserId }),
+        }
+      );
+      if (response.ok) {
+        toast.success('Question deleted successfully');
+        router.push('/questions');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to delete question');
+      }
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      toast.error('Failed to delete question');
+    }
+  };
+
+  const handleEditAnswer = (answerId: string, content?: string, images?: string[]) => {
+    // This function should be called with new content/images when editing
+    if (!session && !anonUserId) {
+      toast.error('Anonymous ID not available. Please refresh and try again.');
+      return;
+    }
+    // You may want to show a modal to edit, here is the fetch logic:
+    fetch(`/api/answers/${answerId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, images, ...(session ? {} : { anonUserId }) }),
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          const updated = await response.json();
+          setAnswers(prev => prev.map(a => a._id === answerId ? { ...a, ...updated } : a));
+          toast.success('Answer updated successfully');
+        } else {
+          const error = await response.json();
+          toast.error(error.error || 'Failed to update answer');
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating answer:', error);
+        toast.error('Failed to update answer');
+      });
+  };
+
+  const [editingAnswer, setEditingAnswer] = useState<Answer | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const openEditModal = (answer: Answer) => {
+    setEditingAnswer(answer);
+    setEditContent(answer.content);
+    setEditImages(answer.images || []);
+  };
+  const closeEditModal = () => {
+    setEditingAnswer(null);
+    setEditContent('');
+    setEditImages([]);
+  };
+  const submitEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error('Please write an answer');
+      return;
+    }
+    setEditLoading(true);
+    await handleEditAnswer(editingAnswer!._id, editContent, editImages);
+    setEditLoading(false);
+    closeEditModal();
   };
 
   if (loading) {
@@ -300,6 +414,24 @@ export default function QuestionPage() {
                   </div>
                 </div>
               </div>
+              {canEditOrDelete(question.author) && (
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => router.push(`/questions/${question._id}/edit`)}
+                    className="btn btn-outline flex items-center gap-2"
+                    title="Edit question"
+                  >
+                    <FiEdit className="w-4 h-4" /> Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteQuestion}
+                    className="btn btn-outline text-red-400 border-red-400 flex items-center gap-2"
+                    title="Delete question"
+                  >
+                    <FiTrash2 className="w-4 h-4" /> Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -425,7 +557,7 @@ export default function QuestionPage() {
                 const voteCount = answer.votes.upvotes.length - answer.votes.downvotes.length;
                 const hasUpvoted = session && answer.votes.upvotes.includes(session.user.id);
                 const hasDownvoted = session && answer.votes.downvotes.includes(session.user.id);
-                const canEdit = session && answer.author._id === session.user.id;
+                const canEdit = canEditOrDelete(answer.author);
 
                 return (
                   <div
@@ -534,6 +666,13 @@ export default function QuestionPage() {
                               {canEdit && (
                                 <div className="flex items-center space-x-2">
                                   <button
+                                    onClick={() => openEditModal(answer)}
+                                    className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-all duration-300"
+                                    title="Edit answer"
+                                  >
+                                    <FiEdit className="w-4 h-4" />
+                                  </button>
+                                  <button
                                     onClick={() => handleDeleteAnswer(answer._id)}
                                     className="p-1 text-red-400 hover:bg-red-400/10 rounded transition-all duration-300"
                                     title="Delete answer"
@@ -617,16 +756,116 @@ export default function QuestionPage() {
         ) : (
           <div className="card p-6 text-center">
             <h3 className="text-xl font-bold text-gray-100 mb-2">Want to answer this question?</h3>
-            <p className="text-gray-400 mb-4">Sign in to post your answer and help others.</p>
+            <p className="text-gray-400 mb-4">You can answer anonymously, or sign in for full features and reputation.</p>
+            <form onSubmit={handleSubmitAnswer} className="space-y-4">
+              <RichTextEditor
+                value={answerContent}
+                onChange={setAnswerContent}
+                placeholder="Write your answer here..."
+                className="mb-4"
+              />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Attach Images (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(handleImageUpload);
+                  }}
+                  className="input"
+                />
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {answerImages.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`Preview ${index + 1}`}
+                        className="w-16 h-16 object-cover rounded-xl border border-white/10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={submittingAnswer || !answerContent.trim()}
+                className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full"
+              >
+                {submittingAnswer ? 'Posting...' : 'Answer Anonymously'}
+              </button>
+            </form>
+            <div className="my-4 text-gray-400">or</div>
             <button 
               onClick={() => router.push('/auth/signin')}
-              className="btn btn-primary"
+              className="btn btn-outline w-full"
             >
               Sign In to Answer
             </button>
           </div>
         )}
       </main>
+
+      {/* Edit Answer Modal */}
+      {editingAnswer && (
+        <Modal isOpen={!!editingAnswer} onClose={closeEditModal}>
+          <div className="p-6 w-full max-w-lg">
+            <h3 className="text-xl font-bold text-gray-100 mb-4">Edit Your Answer</h3>
+            <RichTextEditor
+              value={editContent}
+              onChange={setEditContent}
+              placeholder="Edit your answer here..."
+              className="mb-4"
+            />
+            {/* Image editing UI (optional, simple for now) */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Attached Images
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {editImages.map((image, idx) => (
+                  <div key={idx} className="relative">
+                    <img src={image} alt="Edit preview" className="w-16 h-16 object-cover rounded-xl border border-white/10" />
+                    <button
+                      type="button"
+                      onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeEditModal}
+                className="btn btn-outline"
+                disabled={editLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitEdit}
+                className="btn btn-primary"
+                disabled={editLoading || !editContent.trim()}
+              >
+                {editLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 } 

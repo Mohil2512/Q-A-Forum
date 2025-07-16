@@ -4,7 +4,7 @@ export interface IQuestion extends Document {
   title: string;
   content: string;
   shortDescription: string;
-  author: mongoose.Types.ObjectId;
+  author: mongoose.Types.ObjectId | string;
   tags: string[];
   images: string[];
   votes: {
@@ -38,7 +38,7 @@ const questionSchema = new Schema<IQuestion>({
     maxlength: 200,
   },
   author: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.Mixed, // Allow ObjectId or string
     ref: 'User',
     required: true,
   },

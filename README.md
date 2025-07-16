@@ -1,6 +1,6 @@
 # StackIt - QA Forum Platform
 
-[Try it](https://stack1t.vercel.app/)
+[![Try it live](https://img.shields.io/badge/Try%20it%20Live-StackIt-blue?style=for-the-badge)](https://stack1t.vercel.app/)
 
 A modern, feature-rich Q&A platform built with Next.js, featuring the InfinityFX UI theme with glassmorphism effects and a sophisticated color palette.
 
@@ -65,17 +65,18 @@ EMAIL_FROM=noreply@stackit.com
 ```
 
 ### 3. Database Setup
-Run the database setup script to initialize the database with sample data:
+Run the database seeding script to populate the database with sample data:
 
 ```bash
-npm run setup-db
+npm run seed
 ```
 
 This will create:
-- Database indexes for optimal performance
-- Default user accounts (see below)
-- Sample questions, answers, and tags
-- Sample notifications
+- 8 test users (including 1 master admin)
+- 15 tags
+- 27 questions with realistic content
+- 43 answers (10 accepted)
+- 10 notifications
 
 ### 4. Start Development Server
 ```bash
@@ -86,22 +87,21 @@ Visit `http://localhost:3000` to see the application.
 
 ## 👥 Default Accounts
 
-After running the database setup, you'll have these default accounts:
+After running the database seeding script, you'll have these test accounts:
 
 ### Master Admin
 - **Email**: `master@stackit.com`
-- **Password**: `master123`
+- **Password**: `password123`
 - **Role**: Master Admin (full access)
 
-### Regular Admin
-- **Email**: `admin@stackit.com`
-- **Password**: `admin123`
-- **Role**: Admin (moderation access)
-
-### Demo User
-- **Email**: `user@stackit.com`
-- **Password**: `user123`
-- **Role**: Regular User
+### Test Users
+- **Email**: `john@example.com` / **Password**: `password123`
+- **Email**: `sarah@example.com` / **Password**: `password123`
+- **Email**: `mike@example.com` / **Password**: `password123`
+- **Email**: `emma@example.com` / **Password**: `password123`
+- **Email**: `alex@example.com` / **Password**: `password123`
+- **Email**: `lisa@example.com` / **Password**: `password123`
+- **Email**: `david@example.com` / **Password**: `password123`
 
 ## 🔧 Admin Panel Usage
 
@@ -142,10 +142,11 @@ After running the database setup, you'll have these default accounts:
 - ✅ **Admin Panel**: Complete database setup and management
 
 ### Technical Fixes
-- ✅ **Database Setup**: Comprehensive initialization script
+- ✅ **Database Seeding**: Comprehensive test data script
 - ✅ **API Endpoints**: All notification and admin APIs implemented
-- ✅ **Authentication**: Proper session handling
+- ✅ **Authentication**: Proper session handling with OAuth support
 - ✅ **Error Handling**: Improved error messages and validation
+- ✅ **Security**: Input validation, XSS protection, and proper authorization
 
 ## 📁 Project Structure
 
@@ -182,6 +183,28 @@ The InfinityFX theme is implemented through:
 - `.gradient-text`: Text with gradient effects
 - `.glass`: Glassmorphism background
 - `.glow`: Glow effects for interactive elements
+
+## 🔒 Security Features
+
+### Authentication & Authorization
+- **NextAuth.js**: Secure authentication with multiple providers
+- **JWT Tokens**: Stateless session management
+- **Role-based Access**: User, Admin, and Master Admin roles
+- **OAuth Support**: Google and GitHub authentication
+- **Password Hashing**: bcrypt with salt rounds
+
+### Input Validation & Sanitization
+- **MongoDB Schema Validation**: Strict data validation
+- **API Input Validation**: Request body validation
+- **XSS Protection**: Rich text editor with safe HTML operations
+- **File Upload Security**: Type and size validation
+- **SQL Injection Prevention**: Mongoose ODM protection
+
+### Data Protection
+- **Environment Variables**: Sensitive data in .env files
+- **CORS Protection**: Proper cross-origin handling
+- **Rate Limiting**: Built-in Next.js protection
+- **Secure Headers**: Next.js security headers
 
 ## 🚀 Deployment
 

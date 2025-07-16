@@ -51,34 +51,35 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
     await dbConnect();
-    
     const question = await Question.findById(params.id);
-    
     if (!question) {
       return NextResponse.json(
         { error: 'Question not found' },
         { status: 404 }
       );
     }
-    
-    if (question.author.toString() !== session.user.id && session.user.role !== 'admin') {
+    // Allow edit if:
+    // - Authenticated user and is author or admin
+    // - Anonymous: anonUserId in body matches author (string)
+    let isAuthorized = false;
+    let isAdmin = false;
+    if (session?.user?.id) {
+      isAdmin = session.user.role === 'admin';
+      isAuthorized = question.author.toString() === session.user.id || isAdmin;
+    } else {
+      const { anonUserId } = await request.json();
+      if (anonUserId && typeof question.author === 'string' && question.author === anonUserId) {
+        isAuthorized = true;
+      }
+    }
+    if (!isAuthorized) {
       return NextResponse.json(
         { error: 'Not authorized to edit this question' },
         { status: 403 }
       );
     }
-    
     const { title, content, tags } = await request.json();
-    
     const updatedQuestion = await Question.findByIdAndUpdate(
       params.id,
       {
@@ -88,7 +89,6 @@ export async function PUT(
       },
       { new: true }
     ).populate('author', 'username reputation');
-    
     return NextResponse.json(updatedQuestion);
   } catch (error) {
     console.error('Error updating question:', error);
@@ -105,38 +105,42 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
     await dbConnect();
-    
     const question = await Question.findById(params.id);
-    
     if (!question) {
       return NextResponse.json(
         { error: 'Question not found' },
         { status: 404 }
       );
     }
-    
-    if (question.author.toString() !== session.user.id && session.user.role !== 'admin') {
+    // Allow delete if:
+    // - Authenticated user and is author or admin
+    // - Anonymous: anonUserId in body matches author (string)
+    let isAuthorized = false;
+    let isAdmin = false;
+    if (session?.user?.id) {
+      isAdmin = session.user.role === 'admin';
+      isAuthorized = question.author.toString() === session.user.id || isAdmin;
+    } else {
+      let anonUserId = undefined;
+      try {
+        const body = await request.json();
+        anonUserId = body.anonUserId;
+      } catch {}
+      if (anonUserId && typeof question.author === 'string' && question.author === anonUserId) {
+        isAuthorized = true;
+      }
+    }
+    if (!isAuthorized) {
       return NextResponse.json(
         { error: 'Not authorized to delete this question' },
         { status: 403 }
       );
     }
-    
     // Delete associated answers
     await Answer.deleteMany({ question: params.id });
-    
     // Delete the question
     await Question.findByIdAndDelete(params.id);
-    
     return NextResponse.json({ message: 'Question deleted successfully' });
   } catch (error) {
     console.error('Error deleting question:', error);

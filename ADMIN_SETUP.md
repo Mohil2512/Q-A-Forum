@@ -4,16 +4,17 @@
 
 ### 1. Database Setup
 
-First, set up the database with all required tables and indexes:
+First, seed the database with test data including admin accounts:
 
 ```bash
-npm run setup-db
+npm run seed
 ```
 
 This will:
 - Create all necessary database indexes for optimal performance
 - Create a master admin account
-- Create sample admin and user accounts
+- Create sample test users
+- Create sample questions, answers, and tags
 - Display database statistics
 
 ### 2. Available Admin Accounts
@@ -22,9 +23,9 @@ After running the setup, you'll have these accounts available:
 
 | Role | Email | Password | Description |
 |------|-------|----------|-------------|
-| Master Admin | `admin@stackit.com` | `admin123` | Full administrative access |
-| Moderator | `moderator@stackit.com` | `moderator123` | Admin access for moderation |
-| Regular User | `user@stackit.com` | `user123` | Standard user account |
+| Master Admin | `master@stackit.com` | `password123` | Full administrative access |
+| Test User | `john@example.com` | `password123` | Standard user account |
+| Test User | `sarah@example.com` | `password123` | Standard user account |
 
 ### 3. Accessing the Admin Panel
 
@@ -110,9 +111,9 @@ The setup creates the following collections with optimized indexes:
 ## 🚨 Emergency Procedures
 
 ### If Admin Access is Lost
-1. Run the setup script again: `npm run setup-db`
+1. Run the seed script again: `npm run seed`
 2. This will recreate the master admin account
-3. Use the credentials: `admin@stackit.com` / `admin123`
+3. Use the credentials: `master@stackit.com` / `password123`
 
 ### If Database Connection Fails
 1. Check your MongoDB connection string in `.env.local`

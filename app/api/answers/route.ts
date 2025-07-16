@@ -44,67 +44,73 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
     await dbConnect();
-    
-    const { content, questionId, images } = await request.json();
-    
+    const body = await request.json();
+    const { content, questionId, images, anonUserId } = body;
+
     if (!content || !questionId) {
       return NextResponse.json(
         { error: 'Content and question ID are required' },
         { status: 400 }
       );
     }
-    
-    const user = await User.findById(session.user.id);
-    
-    if (!user || user.isBanned) {
+
+    let authorId;
+    let isAnonymous = false;
+    if (session?.user?.id) {
+      // Authenticated user
+      const user = await User.findById(session.user.id);
+      if (!user || user.isBanned) {
+        return NextResponse.json(
+          { error: 'User not found or banned' },
+          { status: 403 }
+        );
+      }
+      // Check if user is suspended
+      if (user.suspendedUntil && new Date() < user.suspendedUntil) {
+        return NextResponse.json(
+          { error: 'Your account is currently suspended' },
+          { status: 403 }
+        );
+      }
+      authorId = session.user.id;
+    } else if (anonUserId) {
+      // Anonymous user
+      authorId = anonUserId;
+      isAnonymous = true;
+    } else {
       return NextResponse.json(
-        { error: 'User not found or banned' },
-        { status: 403 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 
-    // Check if user is suspended
-    if (user.suspendedUntil && new Date() < user.suspendedUntil) {
-      return NextResponse.json(
-        { error: 'Your account is currently suspended' },
-        { status: 403 }
-      );
-    }
-    
     const question = await Question.findById(questionId);
-    
     if (!question) {
       return NextResponse.json(
         { error: 'Question not found' },
         { status: 404 }
       );
     }
-    
+
     const answer = new Answer({
       content,
       images: images || [],
-      author: session.user.id,
+      author: authorId,
       question: questionId,
     });
-    
     await answer.save();
 
-    // Update user reputation and stats (+100 reputation for answering)
-    user.reputation += 100;
-    user.answersGiven += 1;
-    await user.save();
-    
-    // Create notification for question author
-    if (question.author.toString() !== session.user.id) {
+    // Only update reputation/stats for authenticated users
+    if (!isAnonymous && session?.user?.id) {
+      const user = await User.findById(session.user.id);
+      user.reputation += 100;
+      user.answersGiven += 1;
+      await user.save();
+    }
+
+    // Only create notification for authenticated users
+    if (!isAnonymous && session && question.author.toString() !== session.user.id) {
       await Notification.create({
         recipient: question.author,
         sender: session.user.id,
@@ -115,14 +121,14 @@ export async function POST(request: NextRequest) {
         relatedAnswer: answer._id,
       });
     }
-    
+
     const populatedAnswer = await Answer.findById(answer._id)
       .populate('author', 'username reputation')
       .lean();
-    
+
     return NextResponse.json({
       ...populatedAnswer,
-      reputationGained: 100
+      reputationGained: isAnonymous ? 0 : 100
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating answer:', error);

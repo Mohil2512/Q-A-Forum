@@ -8,6 +8,15 @@ declare module 'next-auth' {
       username: string;
       role: string;
       reputation: number;
+      phoneCountry?: string;
+      phoneNumber?: string;
+      needsProfileCompletion?: boolean;
+      displayName?: string;
+      bio?: string;
+      github?: string;
+      linkedin?: string;
+      twitter?: string;
+      location?: string;
     };
   }
 
@@ -17,6 +26,15 @@ declare module 'next-auth' {
     username: string;
     role: string;
     reputation: number;
+    phoneCountry?: string;
+    phoneNumber?: string;
+    needsProfileCompletion?: boolean;
+    displayName?: string;
+    bio?: string;
+    github?: string;
+    linkedin?: string;
+    twitter?: string;
+    location?: string;
   }
 }
 
@@ -26,5 +44,14 @@ declare module 'next-auth/jwt' {
     username: string;
     role: string;
     reputation: number;
+    phoneCountry?: string;
+    phoneNumber?: string;
+    needsProfileCompletion?: boolean;
+    displayName?: string;
+    bio?: string;
+    github?: string;
+    linkedin?: string;
+    twitter?: string;
+    location?: string;
   }
 } 

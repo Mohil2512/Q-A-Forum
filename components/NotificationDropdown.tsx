@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { FiX, FiCheck, FiBell } from 'react-icons/fi';
+import { FiX, FiCheck, FiBell, FiMoreVertical, FiTrash2 } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
+import Pusher from 'pusher-js';
+import { useSession } from 'next-auth/react';
 
 interface Notification {
   _id: string;
@@ -22,22 +24,56 @@ interface NotificationDropdownProps {
 }
 
 export default function NotificationDropdown({ onClose, onUpdateCount }: NotificationDropdownProps) {
+  const { data: session } = useSession();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotifications();
     fetchNotificationCount();
-  }, []);
+    // Poll for real-time updates every 10 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchNotificationCount();
+    }, 10000);
+    // Pusher real-time subscription
+    let pusher: Pusher | null = null;
+    let channel: any = null;
+    if (session?.user?.id) {
+      pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+        authEndpoint: '/api/pusher/auth', // if using private channels
+      });
+      channel = pusher.subscribe(`user-${session.user.id}`);
+      channel.bind('new-notification', (data: any) => {
+        setNotifications((prev) => [data.notification, ...prev]);
+        setNotificationCount((prev) => prev + 1);
+      });
+    }
+    return () => {
+      clearInterval(interval);
+      if (pusher && channel) {
+        channel.unbind_all();
+        channel.unsubscribe();
+        pusher.disconnect();
+      }
+    };
+  }, [session?.user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest('.notification-bell-btn')
+      ) {
         setIsOpen(false);
+        setOpenMenuId(null);
       }
     };
 
@@ -101,23 +137,41 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
     }
   };
 
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'DELETE',
+      });
+      setNotifications(prev => prev.filter(notif => notif._id !== notificationId));
+      fetchNotificationCount();
+      onUpdateCount?.();
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
   const handleClose = () => {
     setIsOpen(false);
     onClose?.();
   };
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
-    if (isOpen) {
-      onClose?.();
-    }
+    setIsOpen((prev) => {
+      const next = !prev;
+      if (!next) {
+        setOpenMenuId(null);
+        onClose?.();
+      }
+      return next;
+    });
   };
 
   return (
     <div className="relative">
       <button
         onClick={handleToggle}
-        className="p-2 text-[#c8acd6] hover:text-white transition-colors duration-300 relative"
+        className="notification-bell-btn p-2 text-[#c8acd6] hover:text-white transition-colors duration-300 relative"
+        type="button"
       >
         <FiBell className="w-5 h-5" />
         {notificationCount > 0 && (
@@ -173,14 +227,42 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
                           <span className="text-xs text-[#433d8b]">
                             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                           </span>
-                          {!notification.isRead && (
+                          <div className="relative flex items-center gap-2">
+                            {!notification.isRead && (
+                              <button
+                                onClick={() => markAsRead(notification._id)}
+                                className="text-xs text-[#433d8b] hover:text-[#c8acd6] transition-colors duration-300"
+                                title="Mark as read"
+                              >
+                                <FiCheck className="w-3 h-3" />
+                              </button>
+                            )}
                             <button
-                              onClick={() => markAsRead(notification._id)}
-                              className="text-xs text-[#433d8b] hover:text-[#c8acd6] transition-colors duration-300"
+                              onClick={() => setOpenMenuId(openMenuId === notification._id ? null : notification._id)}
+                              className="p-1 rounded hover:bg-[#433d8b]/20"
+                              title="More actions"
                             >
-                              <FiCheck className="w-3 h-3" />
+                              <FiMoreVertical className="w-4 h-4" />
                             </button>
-                          )}
+                            {openMenuId === notification._id && (
+                              <div className="absolute right-0 top-6 z-10 bg-[#17153b] border border-[#433d8b]/30 rounded shadow-lg min-w-[120px]">
+                                {!notification.isRead && (
+                                  <button
+                                    onClick={() => { markAsRead(notification._id); setOpenMenuId(null); }}
+                                    className="block w-full text-left px-4 py-2 text-sm text-[#c8acd6] hover:bg-[#433d8b]/20"
+                                  >
+                                    Mark as read
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => { deleteNotification(notification._id); setOpenMenuId(null); }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#433d8b]/20"
+                                >
+                                  <FiTrash2 className="inline mr-2 w-4 h-4" /> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -111,7 +111,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center glow group-hover:glow-lg transition-all duration-300">
-              <FiHome className="w-6 h-6 text-white" />
+              <img src="/favicon.svg" alt="Site Logo" className="w-6 h-6" />
             </div>
             <span className="text-2xl font-bold gradient-text">StackIt</span>
           </Link>
@@ -132,13 +132,20 @@ export default function Header() {
               <FiTag className="w-4 h-4" />
               <span>Tags</span>
             </Link>
+            <Link 
+              href="/questions/ask" 
+              className="btn btn-primary text-sm px-6 py-2 whitespace-nowrap"
+            >
+              <FiPlus className="w-4 h-4 mr-1 inline" />
+              Ask Question
+            </Link>
             {session && (
               <Link 
-                href="/questions/ask" 
-                className="btn btn-primary text-sm px-6 py-2 whitespace-nowrap"
+                href="/profile" 
+                className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center space-x-2"
               >
-                <FiPlus className="w-4 h-4 mr-1 inline" />
-                Ask Question
+                <FiUser className="w-4 h-4" />
+                <span>Profile</span>
               </Link>
             )}
           </nav>
@@ -201,11 +208,20 @@ export default function Header() {
 
                   {/* User Dropdown */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden z-50">
-                      <div className="py-2">
+                    <div className="absolute right-0 mt-2 w-80 card z-50 border border-[#433d8b]/30 rounded-xl shadow-2xl overflow-hidden" style={{maxHeight: '24rem', overflowY: 'auto'}}>
+                      <div className="flex items-center justify-between p-4 border-b border-[#433d8b]/30">
+                        <h3 className="text-lg font-semibold gradient-text">Profile</h3>
+                        <button
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="text-[#433d8b] hover:text-white transition-colors duration-300"
+                        >
+                          <FiX className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="divide-y divide-[#433d8b]/30">
                         <Link
                           href="/profile"
-                          className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#433d8b]/10 transition-colors duration-200"
                           onClick={() => setIsProfileDropdownOpen(false)}
                         >
                           <FiUser className="w-4 h-4 mr-3" />
@@ -214,7 +230,7 @@ export default function Header() {
                         {session.user?.role === 'admin' && (
                           <Link
                             href="/admin-panel"
-                            className="flex items-center px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                            className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#433d8b]/10 transition-colors duration-200"
                             onClick={() => setIsProfileDropdownOpen(false)}
                           >
                             <FiSettings className="w-4 h-4 mr-3" />
@@ -223,7 +239,7 @@ export default function Header() {
                         )}
                         <button
                           onClick={handleLogout}
-                          className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-white/5 transition-colors duration-200"
+                          className="flex items-center w-full px-4 py-3 text-gray-300 hover:bg-[#433d8b]/10 transition-colors duration-200"
                         >
                           <FiLogOut className="w-4 h-4 mr-3" />
                           Logout

@@ -45,3 +45,36 @@ export async function PUT(
     );
   }
 } 
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    await dbConnect();
+    const notification = await Notification.findOneAndDelete({
+      _id: params.id,
+      recipient: session.user.id
+    });
+    if (!notification) {
+      return NextResponse.json(
+        { error: 'Notification not found' },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ message: 'Notification deleted' });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete notification' },
+      { status: 500 }
+    );
+  }
+} 

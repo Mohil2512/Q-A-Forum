@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IAnswer extends Document {
   content: string;
   images: string[];
-  author: mongoose.Types.ObjectId;
+  author: mongoose.Types.ObjectId | string;
   question: mongoose.Types.ObjectId;
   votes: {
     upvotes: mongoose.Types.ObjectId[];
@@ -25,7 +25,7 @@ const answerSchema = new Schema<IAnswer>({
     maxlength: 1024, // 1MB max
   }],
   author: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.Mixed, // Allow ObjectId or string
     ref: 'User',
     required: true,
   },

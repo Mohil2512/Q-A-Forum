@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     
-    const { username, email, password } = await request.json();
+    const { username, email, password, phoneCountry, phoneNumber } = await request.json();
     
     // Validation
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !phoneCountry || !phoneNumber) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -63,6 +63,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      return NextResponse.json(
+        { error: 'Phone number must be 10 digits' },
+        { status: 400 }
+      );
+    }
+    if (phoneCountry.length < 2 || phoneCountry.length > 5) {
+      return NextResponse.json(
+        { error: 'Country code is invalid' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({
       $or: [{ email }, { username }]
@@ -88,6 +101,8 @@ export async function POST(request: NextRequest) {
       username,
       email,
       password,
+      phoneCountry,
+      phoneNumber,
       role: 'user',
       reputation: 0,
     });
