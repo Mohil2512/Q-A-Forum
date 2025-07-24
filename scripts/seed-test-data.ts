@@ -12,6 +12,7 @@
  * - 10 notifications
  */
 
+import 'dotenv/config';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import Question from '../models/Question';
@@ -425,10 +426,10 @@ async function seedData() {
     const questionsWithAuthors = testQuestions.map((q, index) => ({
       ...q,
       author: createdUsers[index % createdUsers.length]._id,
-      tags: q.tags.map(tagName => {
-        const tag = createdTags.find(t => t.name === tagName);
-        return tag ? tag._id : null;
-      }).filter(Boolean)
+      // Ensure tags are always tag names
+      tags: q.tags.map((tag: string) => tag.toLowerCase().trim()),
+      votes: { upvotes: [], downvotes: [] },
+      images: [],
     }));
 
     const createdQuestions = await Question.insertMany(questionsWithAuthors);

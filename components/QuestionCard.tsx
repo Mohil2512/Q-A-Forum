@@ -4,6 +4,11 @@ import Link from 'next/link';
 import { FiEye, FiMessageSquare, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
 
+interface Tag {
+  name: string;
+  description?: string;
+}
+
 interface QuestionCardProps {
   question: {
     _id: string;
@@ -13,7 +18,7 @@ interface QuestionCardProps {
       username: string;
       reputation: number;
     };
-    tags: string[];
+    tags: Tag[];
     votes: {
       upvotes: string[];
       downvotes: string[];
@@ -26,73 +31,54 @@ interface QuestionCardProps {
 
 export default function QuestionCard({ question }: QuestionCardProps) {
   const voteCount = question.votes.upvotes.length - question.votes.downvotes.length;
-  
   return (
-    <div className="card hover:shadow-md transition-shadow rounded-lg">
-      <div className="flex gap-4">
-        {/* Vote Stats */}
-        <div className="flex flex-col items-center space-y-2 text-[#7d8590]">
-          <div className="flex items-center space-x-1">
-            <FiThumbsUp className="w-4 h-4" />
-            <span className="text-sm font-medium">{question.votes.upvotes.length}</span>
-          </div>
-          <div className="text-lg font-bold text-[#f0f6fc]">{voteCount}</div>
-          <div className="flex items-center space-x-1">
-            <FiThumbsDown className="w-4 h-4" />
-            <span className="text-sm font-medium">{question.votes.downvotes.length}</span>
-          </div>
-        </div>
-
-        {/* Question Content */}
-        <div className="flex-1 min-w-0">
-          <Link href={`/questions/${question._id}`}>
-            <h3 className="text-lg font-semibold text-[#f0f6fc] hover:text-[#58a6ff] transition-github mb-2">
-              {question.title}
-            </h3>
+    <div className="rounded-xl border border-[#2e236c] bg-[#181a2a] shadow-md hover:shadow-lg transition-shadow p-3 mb-4 flex flex-col gap-3">
+      {/* Title */}
+      <Link href={`/questions/${question._id}`}>
+        <h3 className="text-2xl font-bold text-[#c8acd6] hover:text-[#58a6ff] transition-colors mb-1 truncate">
+          {question.title}
+        </h3>
+      </Link>
+      {/* Description */}
+      <p className="text-[#b3b8c5] text-base mb-2 line-clamp-2">
+        {question.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
+      </p>
+      {/* Tags */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {question.tags.slice(0, 4).map((tag) => (
+          <Link
+            key={tag.name}
+            href={`/tags/${tag.name}`}
+            className="px-3 py-1 rounded-full bg-[#2e236c] text-[#c8acd6] text-xs font-semibold hover:bg-[#433d8b] transition-colors border border-[#322a5c]"
+            title={tag.description || tag.name}
+          >
+            #{tag.name}
           </Link>
-          
-          <p className="text-[#c9d1d9] text-sm mb-3 overflow-hidden" style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-          }}>
-            {question.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
-          </p>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {question.tags.slice(0, 3).map((tag) => (
-              <Link
-                key={tag}
-                href={`/tags/${tag}`}
-                className="tag hover:bg-[#388bfd] transition-github"
-              >
-                {tag}
-              </Link>
-            ))}
-            {question.tags.length > 3 && (
-              <span className="text-[#7d8590] text-sm">+{question.tags.length - 3} more</span>
-            )}
+        ))}
+        {question.tags.length > 4 && (
+          <span className="text-[#7d8590] text-xs">+{question.tags.length - 4} more</span>
+        )}
+      </div>
+      {/* Divider */}
+      <div className="border-t border-[#282c44] my-2" />
+      {/* Bottom Bar: Meta & Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-6 w-full justify-between">
+          <div className="flex items-center gap-4 flex-wrap text-[#7d8590]">
+            <span className="flex items-center gap-1"><span className="font-medium text-[#c8acd6]">👤 {question.author.username}</span></span>
+            <span className="flex items-center gap-1">⭐ {question.author.reputation}</span>
+            <span><FiEye className="inline w-4 h-4 mr-1" />{question.views} views</span>
+            <span><FiMessageSquare className="inline w-4 h-4 mr-1" />{question.answers} answers</span>
+            <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
           </div>
-
-          {/* Meta Info */}
-          <div className="flex items-center justify-between text-sm text-[#7d8590]">
-            <div className="flex items-center space-x-4">
-              <span>Asked by {question.author.username}</span>
-              <span>Reputation: {question.author.reputation}</span>
-              <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <FiEye className="w-4 h-4" />
-                <span>{question.views} views</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <FiMessageSquare className="w-4 h-4" />
-                <span>{question.answers} answers</span>
-              </div>
-            </div>
+          {/* Stats: Upvotes/Downvotes only */}
+          <div className="flex items-center gap-3 flex-nowrap">
+            <span className="flex items-center gap-1 bg-[#2e236c] text-[#58a6ff] px-2 py-1 rounded-full font-bold">
+              <FiThumbsUp className="w-4 h-4" />{question.votes.upvotes.length}
+            </span>
+            <span className="flex items-center gap-1 bg-[#2e236c] text-[#e57373] px-2 py-1 rounded-full font-bold">
+              <FiThumbsDown className="w-4 h-4" />{question.votes.downvotes.length}
+            </span>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import ClientProviders from '@/components/ClientProviders';
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ClientProviders>
           <ClientRedirector />
           {children}
+          <Footer />
         </ClientProviders>
       </body>
     </html>

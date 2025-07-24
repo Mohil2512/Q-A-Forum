@@ -71,7 +71,11 @@ export async function GET(request: NextRequest) {
       .skip(skip)
       .limit(limit)
       .lean();
-    
+
+    // Fetch all tags in one go for mapping
+    const allTags = await (await import('@/models/Tag')).default.find({}).lean();
+    const tagMap = new Map(allTags.map((tag: any) => [tag.name, tag]));
+
     // Add answer count and vote count to each question
     const questionsWithStats = await Promise.all(
       questions.map(async (question) => {
@@ -90,11 +94,25 @@ export async function GET(request: NextRequest) {
         ]);
 
         const voteCount = (question.votes?.upvotes?.length || 0) - (question.votes?.downvotes?.length || 0);
-        
+        // Map tag names or ObjectIds to tag objects
+        const tags = (question.tags || []).map((tag: any) => {
+          if (typeof tag === 'string' && tagMap.has(tag)) return tagMap.get(tag);
+          if (typeof tag === 'object' && tag && tag._id) {
+            // Try to find by ObjectId
+            const found = allTags.find((t: any) => t._id.toString() === tag._id.toString());
+            if (found) return found;
+          }
+          // Try to find by stringified ObjectId
+          const foundById = allTags.find((t: any) => t._id.toString() === String(tag));
+          if (foundById) return foundById;
+          // Fallback: show as unknown tag
+          return { name: typeof tag === 'string' ? tag : String(tag) };
+        });
         return {
           ...question,
           answers: answerCount[0]?.count || 0,
-          voteCount
+          voteCount,
+          tags,
         };
       })
     );

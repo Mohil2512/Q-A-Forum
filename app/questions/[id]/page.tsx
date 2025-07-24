@@ -554,9 +554,11 @@ export default function QuestionPage() {
           ) : (
             <div className="space-y-6">
               {answers.map((answer) => {
-                const voteCount = answer.votes.upvotes.length - answer.votes.downvotes.length;
-                const hasUpvoted = session && answer.votes.upvotes.includes(session.user.id);
-                const hasDownvoted = session && answer.votes.downvotes.includes(session.user.id);
+                const upvotes = answer.votes?.upvotes ?? [];
+                const downvotes = answer.votes?.downvotes ?? [];
+                const voteCount = upvotes.length - downvotes.length;
+                const hasUpvoted = session && upvotes.includes(session.user.id);
+                const hasDownvoted = session && downvotes.includes(session.user.id);
                 const canEdit = canEditOrDelete(answer.author);
 
                 return (
@@ -582,13 +584,13 @@ export default function QuestionPage() {
                           </button>
                           <div className="flex flex-col items-center space-y-1">
                             <span className="text-sm font-medium text-green-400">
-                              {answer.votes.upvotes.length}
+                              {upvotes.length}
                             </span>
                             <span className="text-xl font-bold text-gray-100">
                               {voteCount}
                             </span>
                             <span className="text-sm font-medium text-red-400">
-                              {answer.votes.downvotes.length}
+                              {downvotes.length}
                             </span>
                           </div>
                           <button
