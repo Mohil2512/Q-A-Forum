@@ -12,6 +12,10 @@ export interface IAnswer extends Document {
   isAccepted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  realAuthor: mongoose.Types.ObjectId;
+  anonymous: boolean;
+  anonymousId: string;
+  anonymousName: string;
 }
 
 const answerSchema = new Schema<IAnswer>({
@@ -47,6 +51,20 @@ const answerSchema = new Schema<IAnswer>({
   isAccepted: {
     type: Boolean,
     default: false,
+  },
+  realAuthor: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  anonymous: {
+    type: Boolean,
+    default: false,
+  },
+  anonymousId: {
+    type: String,
+  },
+  anonymousName: {
+    type: String,
   },
 }, {
   timestamps: true,

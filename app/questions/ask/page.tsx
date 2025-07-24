@@ -9,6 +9,14 @@ import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { Session } from 'next-auth';
+
+// Define a type for user with id, anonymousId, and anonymousName
+interface UserWithAnon {
+  id?: string;
+  anonymousId?: string;
+  anonymousName?: string;
+}
 
 interface QuestionForm {
   title: string;
@@ -20,6 +28,7 @@ interface QuestionForm {
 
 export default function AskQuestionPage() {
   const { data: session, status } = useSession();
+  const user = session?.user as UserWithAnon | undefined;
   const router = useRouter();
   const [formData, setFormData] = useState<QuestionForm>({
     title: '',
@@ -31,6 +40,7 @@ export default function AskQuestionPage() {
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [postAnonymously, setPostAnonymously] = useState(false);
 
   // Anonymous ID logic
   const [anonUserId, setAnonUserId] = useState<string | null>(null);
@@ -146,6 +156,23 @@ export default function AskQuestionPage() {
         }
       }
 
+      // Prepare anonymous fields if needed
+      let anonymousFields = {};
+      if (session && postAnonymously) {
+        anonymousFields = {
+          anonymous: true,
+          anonymousId: user?.anonymousId || '',
+          anonymousName: user?.anonymousName || 'anon',
+          realAuthor: user?.id,
+        };
+      } else if (!session && anonUserId) {
+        anonymousFields = {
+          anonymous: true,
+          anonymousId: anonUserId,
+          anonymousName: 'anon-guest',
+        };
+      }
+
       // Create question
       const response = await fetch('/api/questions', {
         method: 'POST',
@@ -158,7 +185,7 @@ export default function AskQuestionPage() {
           content: formData.content,
           tags: formData.tags,
           images: imageUrls,
-          ...(session ? {} : { anonUserId }),
+          ...anonymousFields,
         }),
       });
 
@@ -529,7 +556,16 @@ export default function AskQuestionPage() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-4 items-center">
+            <label className="flex items-center gap-2 text-[#c8acd6] text-sm">
+              <input
+                type="checkbox"
+                checked={postAnonymously}
+                onChange={e => setPostAnonymously(e.target.checked)}
+                className="form-checkbox rounded text-purple-500 focus:ring-purple-500"
+              />
+              Post Anonymously
+            </label>
             <Link href="/questions" className="btn btn-outline text-lg flex-1 flex items-center justify-center gap-2">
               Cancel
             </Link>

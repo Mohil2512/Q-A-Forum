@@ -22,6 +22,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import Modal from '@/components/Modal';
+import { Session } from 'next-auth';
 
 interface Question {
   _id: string;
@@ -44,6 +45,9 @@ interface Question {
   isAccepted: boolean;
   acceptedAnswer?: string;
   createdAt: string;
+  anonymous: boolean;
+  anonymousId?: string;
+  anonymousName?: string;
 }
 
 interface Answer {
@@ -61,12 +65,24 @@ interface Answer {
   };
   isAccepted: boolean;
   createdAt: string;
+  anonymous: boolean;
+  anonymousId?: string;
+  anonymousName?: string;
+}
+
+// Define a type for user with id, anonymousId, and anonymousName
+interface UserWithAnon {
+  id?: string;
+  anonymousId?: string;
+  anonymousName?: string;
 }
 
 export default function QuestionPage() {
   const { id } = useParams();
   const { data: session } = useSession();
   const router = useRouter();
+  const user = session?.user as UserWithAnon | undefined;
+  const [postAnonymously, setPostAnonymously] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [answerContent, setAnswerContent] = useState('');
@@ -164,6 +180,21 @@ export default function QuestionPage() {
     setSubmittingAnswer(true);
 
     try {
+      let anonymousFields = {};
+      if (session && postAnonymously) {
+        anonymousFields = {
+          anonymous: true,
+          anonymousId: user?.anonymousId || '',
+          anonymousName: user?.anonymousName || 'anon',
+          realAuthor: user?.id,
+        };
+      } else if (!session && anonUserId) {
+        anonymousFields = {
+          anonymous: true,
+          anonymousId: anonUserId,
+          anonymousName: 'anon-guest',
+        };
+      }
       const response = await fetch('/api/answers', {
         method: 'POST',
         headers: {
@@ -173,7 +204,7 @@ export default function QuestionPage() {
           content: answerContent,
           questionId: id,
           images: answerImages,
-          ...(session ? {} : { anonUserId }),
+          ...anonymousFields,
         }),
       });
 
@@ -521,8 +552,16 @@ export default function QuestionPage() {
                       <FiUser className="text-white w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-100">{question.author.username}</div>
-                      <div className="text-sm text-gray-400">Reputation: {question.author.reputation}</div>
+                      {question.anonymous ? (
+                        <div className="font-medium text-gray-100">{question.anonymousName || 'Anonymous'}</div>
+                      ) : (
+                        <a href={`/profile/${question.author._id || question.author}`} className="font-medium text-gray-100 hover:underline">
+                          {question.author.username}
+                        </a>
+                      )}
+                      {!question.anonymous && (
+                        <div className="text-sm text-gray-400">Reputation: {question.author.reputation}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -657,8 +696,16 @@ export default function QuestionPage() {
                                 <FiUser className="text-white w-4 h-4" />
                               </div>
                               <div>
-                                <div className="font-medium text-gray-100">{answer.author.username}</div>
-                                <div className="text-sm text-gray-400">Reputation: {answer.author.reputation}</div>
+                                {answer.anonymous ? (
+                                  <div className="font-medium text-gray-100">{answer.anonymousName || 'Anonymous'}</div>
+                                ) : (
+                                  <a href={`/profile/${answer.author._id || answer.author}`} className="font-medium text-gray-100 hover:underline">
+                                    {answer.author.username}
+                                  </a>
+                                )}
+                                {!answer.anonymous && (
+                                  <div className="text-sm text-gray-400">Reputation: {answer.author.reputation}</div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -699,6 +746,15 @@ export default function QuestionPage() {
         {session ? (
           <div className="card p-6">
             <h3 className="text-xl font-bold text-gray-100 mb-4">Your Answer</h3>
+            <label className="flex items-center gap-2 text-[#c8acd6] text-sm mb-4">
+              <input
+                type="checkbox"
+                checked={postAnonymously}
+                onChange={e => setPostAnonymously(e.target.checked)}
+                className="form-checkbox rounded text-purple-500 focus:ring-purple-500"
+              />
+              Post Anonymously
+            </label>
             <form onSubmit={handleSubmitAnswer}>
               <RichTextEditor
                 value={answerContent}

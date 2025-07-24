@@ -29,6 +29,8 @@ export interface IUser extends Document {
   oauthProvider?: string;
   provider?: string;
   providerId?: string;
+  anonymousId?: string;
+  anonymousName?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -143,6 +145,15 @@ const userSchema = new Schema<IUser>({
     type: String,
     trim: true,
     match: [/^\d{10}$/, 'Phone number must be 10 digits'],
+  },
+  anonymousId: {
+    type: String,
+    unique: true,
+    index: true,
+  },
+  anonymousName: {
+    type: String,
+    maxlength: 50,
   },
 }, {
   timestamps: true,

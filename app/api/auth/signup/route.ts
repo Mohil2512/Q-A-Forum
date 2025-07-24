@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,6 +98,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user
+    // Generate anonymousId and anonymousName
+    const anonymousId = crypto.randomBytes(16).toString('hex');
+    const anonymousName = `anon-${Math.floor(100000 + Math.random() * 900000)}`;
     const user = new User({
       username,
       email,
@@ -105,6 +109,8 @@ export async function POST(request: NextRequest) {
       phoneNumber,
       role: 'user',
       reputation: 0,
+      anonymousId,
+      anonymousName,
     });
 
     await user.save();

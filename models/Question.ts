@@ -17,6 +17,10 @@ export interface IQuestion extends Document {
   acceptedAnswer?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  realAuthor: mongoose.Types.ObjectId;
+  anonymous: boolean;
+  anonymousId: string;
+  anonymousName: string;
 }
 
 const questionSchema = new Schema<IQuestion>({
@@ -77,6 +81,20 @@ const questionSchema = new Schema<IQuestion>({
   acceptedAnswer: {
     type: Schema.Types.ObjectId,
     ref: 'Answer',
+  },
+  realAuthor: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  anonymous: {
+    type: Boolean,
+    default: false,
+  },
+  anonymousId: {
+    type: String,
+  },
+  anonymousName: {
+    type: String,
   },
 }, {
   timestamps: true,

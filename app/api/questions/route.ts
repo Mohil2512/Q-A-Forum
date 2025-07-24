@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
     
     // Search filter
     if (search) {
-      query.$text = { $search: search };
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } }
+      ];
     }
     
     // Advanced filters
