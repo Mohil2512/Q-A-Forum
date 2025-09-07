@@ -20,6 +20,7 @@ export default function CompleteProfilePage() {
     phoneNumber: "",
   });
   const [loading, setLoading] = useState(false);
+  const [profileCompleted, setProfileCompleted] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -70,12 +71,28 @@ export default function CompleteProfilePage() {
       const data = await res.json();
       if (res.ok) {
         toast.success("Profile completed!");
-        await updateSession();
-        router.replace("/questions");
+        setProfileCompleted(true);
+        
+        // Update session with new data - this will trigger the JWT callback
+        await updateSession({
+          user: {
+            ...session?.user,
+            username: formData.username,
+            phoneCountry: formData.phoneCountry,
+            phoneNumber: formData.phoneNumber,
+            needsProfileCompletion: false,
+          }
+        });
+        
+        // Small delay to ensure session update is processed
+        setTimeout(() => {
+          router.push("/questions");
+        }, 1000);
       } else {
         toast.error(data.error || "Failed to update profile");
       }
     } catch (error) {
+      console.error('Profile update error:', error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -145,6 +162,16 @@ export default function CompleteProfilePage() {
           >
             {loading ? "Saving..." : "Complete Profile"}
           </button>
+          
+          {profileCompleted && (
+            <button
+              type="button"
+              onClick={() => router.push("/questions")}
+              className="btn btn-secondary w-full text-lg mt-2"
+            >
+              Continue to Questions →
+            </button>
+          )}
         </form>
         <button
           onClick={() => signOut({ callbackUrl: "/auth/signin" })}

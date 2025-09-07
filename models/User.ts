@@ -54,7 +54,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: function() {
       // Only require password if not using OAuth
-      return !this.oauthProvider;
+      return !this.provider && !this.oauthProvider;
     },
     minlength: 6,
   },
@@ -149,6 +149,7 @@ const userSchema = new Schema<IUser>({
   anonymousId: {
     type: String,
     unique: true,
+    sparse: true, // Allow multiple null values
     index: true,
   },
   anonymousName: {

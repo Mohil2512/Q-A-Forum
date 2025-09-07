@@ -48,7 +48,21 @@ export async function PUT(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    return NextResponse.json({ message: 'Profile updated successfully' });
+    
+    // Return updated user data
+    return NextResponse.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        phoneCountry: user.phoneCountry,
+        phoneNumber: user.phoneNumber,
+        displayName: user.displayName,
+        role: user.role,
+        reputation: user.reputation
+      }
+    });
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });

@@ -306,7 +306,7 @@ export default function QuestionsPage() {
               </div>
             ) : (
               filteredQuestions.map((question) => (
-                <div key={question._id} className="card p-4 hover-lift w-full m-0">
+                <div key={question._id} className="card p-4 hover-lift w-full mb-6 relative">
                   <div className="flex items-start space-x-4">
                     {/* Vote Stats */}
                     <div className="flex flex-col items-center space-y-2 min-w-[60px]">

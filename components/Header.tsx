@@ -54,12 +54,7 @@ export default function Header() {
     };
   }, []);
 
-  // Close profile dropdown when notification dropdown opens
-  const handleNotificationToggle = () => {
-    setIsProfileDropdownOpen(false);
-  };
-
-  // Close notification dropdown when profile dropdown opens
+  // Toggle profile dropdown
   const handleProfileToggle = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
@@ -143,10 +138,85 @@ export default function Header() {
           <Link href="/questions" className="text-lg font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors">Questions</Link>
           <Link href="/tags" className="text-lg font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors">Tags</Link>
         </nav>
-        {/* Auth Buttons */}
+        {/* Auth Section */}
         <div className="flex items-center gap-4">
-          <Link href="/auth/signin" className="btn btn-outline px-5 py-2 text-base">Sign In</Link>
-          <Link href="/auth/signup" className="btn btn-primary px-5 py-2 text-base">Sign Up</Link>
+          {session ? (
+            <>
+              {/* Notifications */}
+              <NotificationDropdown />
+              
+              {/* Ask Question Button */}
+              <Link 
+                href="/questions/ask" 
+                className="btn btn-primary px-4 py-2 text-sm flex items-center gap-2"
+              >
+                <FiPlus className="w-4 h-4" />
+                Ask
+              </Link>
+
+              {/* User Profile Dropdown */}
+              <div className="relative" ref={profileDropdownRef}>
+                <button 
+                  onClick={handleProfileToggle}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                    <span className="text-sm font-semibold text-white">
+                      {session.user?.username?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <span className="text-gray-200 font-medium hidden sm:block">
+                    {session.user?.displayName || session.user?.username || session.user?.email?.split('@')[0] || 'User'}
+                  </span>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#1a1625]/95 backdrop-blur-sm border border-white/10 rounded-xl shadow-xl py-2 z-50">
+                    <div className="px-4 py-3 border-b border-white/10">
+                      <p className="text-sm font-medium text-gray-200">
+                        {session.user?.displayName || session.user?.username || 'User'}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {session.user?.email}
+                      </p>
+                    </div>
+                    
+                    <Link 
+                      href="/profile" 
+                      className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 transition-colors"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    >
+                      <FiUser className="w-4 h-4" />
+                      Profile
+                    </Link>
+                    
+                    <Link 
+                      href="/profile/edit" 
+                      className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 transition-colors"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    >
+                      <FiSettings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-white/5 transition-colors w-full text-left"
+                    >
+                      <FiLogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/signin" className="btn btn-outline px-5 py-2 text-base">Sign In</Link>
+              <Link href="/auth/signup" className="btn btn-primary px-5 py-2 text-base">Sign Up</Link>
+            </>
+          )}
         </div>
       </div>
     </header>

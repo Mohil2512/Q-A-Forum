@@ -258,13 +258,22 @@
   box-shadow: 0 0 40px rgba(147, 51, 234, 0.4);
 }
 
+/* Custom utilities */
+@layer utilities {
+  .scale-102 {
+    transform: scale(1.02);
+  }
+}
+
 /* Hover effects */
 .hover-lift {
-  @apply hover:transform hover:scale-105 transition-all duration-300;
+  @apply hover:transform hover:scale-102 transition-all duration-300;
+  transform-origin: center;
 }
 
 .hover-lift:hover {
-  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.2);
+  z-index: 10;
 }
 
 .hover-glow {

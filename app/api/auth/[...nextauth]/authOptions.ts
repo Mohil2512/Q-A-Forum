@@ -59,6 +59,13 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -70,36 +77,84 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      await dbConnect();
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        const profileId = (profile as any)?.id || (profile as any)?.sub;
-        const profileEmail = (profile as any)?.email;
-        
-        if (!profileId || !profileEmail) {
-          return false;
-        }
-        
-        let dbUser = await User.findOne({
-          provider: account.provider,
-          providerId: profileId,
+      try {
+        console.log('OAuth signIn callback triggered:', { 
+          provider: account?.provider, 
+          email: (profile as any)?.email 
         });
-        if (!dbUser) {
-          dbUser = await User.create({
-            email: profileEmail,
-            provider: account.provider,
-            providerId: profileId,
+        
+        await dbConnect();
+        
+        if (account?.provider === 'google' || account?.provider === 'github') {
+          const profileId = (profile as any)?.id || (profile as any)?.sub;
+          const profileEmail = (profile as any)?.email;
+          const profileName = (profile as any)?.name || (profile as any)?.login;
+          
+          console.log('OAuth profile data:', { profileId, profileEmail, profileName });
+          
+          if (!profileId || !profileEmail) {
+            console.error('OAuth profile missing required fields:', { profileId, profileEmail });
+            return false;
+          }
+          
+          let dbUser = await User.findOne({
+            $or: [
+              { provider: account.provider, providerId: profileId },
+              { email: profileEmail }
+            ]
           });
+          
+          if (!dbUser) {
+            // Generate a unique username from email or profile name
+            let username = profileName?.replace(/\s+/g, '_').toLowerCase() || 
+                          profileEmail.split('@')[0].replace(/[^a-z0-9_]/gi, '_').toLowerCase();
+            
+            // Ensure username is unique
+            let counter = 1;
+            let originalUsername = username;
+            while (await User.findOne({ username })) {
+              username = `${originalUsername}_${counter}`;
+              counter++;
+            }
+            
+            console.log('Creating new OAuth user with username:', username);
+            
+            try {
+              dbUser = await User.create({
+                email: profileEmail,
+                username: username,
+                displayName: profileName || profileEmail.split('@')[0],
+                provider: account.provider,
+                providerId: profileId,
+                role: 'user',
+                reputation: 0,
+                // Don't set password for OAuth users
+              });
+              console.log('Successfully created OAuth user:', dbUser.email);
+            } catch (error) {
+              console.error('Error creating OAuth user:', error);
+              return false;
+            }
+          } else {
+            console.log('Found existing OAuth user:', dbUser.email);
+          }
+          
+          user.id = dbUser._id.toString();
+          user.username = dbUser.username;
+          user.role = dbUser.role;
+          user.reputation = dbUser.reputation;
+          user.phoneCountry = dbUser.phoneCountry;
+          user.phoneNumber = dbUser.phoneNumber;
         }
-        user.id = dbUser._id.toString();
-        user.username = dbUser.username;
-        user.role = dbUser.role;
-        user.reputation = dbUser.reputation;
-        user.phoneCountry = dbUser.phoneCountry;
-        user.phoneNumber = dbUser.phoneNumber;
+        
+        console.log('OAuth signIn callback successful');
+        return true;
+      } catch (error) {
+        console.error('OAuth signIn callback error:', error);
+        return false;
       }
-      return true;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
@@ -110,8 +165,27 @@ export const authOptions: AuthOptions = {
         // If OAuth, check for missing fields
         if ((account?.provider === 'google' || account?.provider === 'github') && (!user.username || !(user as any).phoneCountry || !(user as any).phoneNumber)) {
           token.needsProfileCompletion = true;
+        } else {
+          token.needsProfileCompletion = false;
         }
       }
+      
+      // Handle session updates (when updateSession is called)
+      if (trigger === 'update' && session) {
+        // Update token with new session data
+        if (session.user) {
+          token.username = session.user.username;
+          token.phoneCountry = session.user.phoneCountry;
+          token.phoneNumber = session.user.phoneNumber;
+          token.needsProfileCompletion = session.user.needsProfileCompletion;
+        }
+      }
+      
+      // Re-check profile completion status by checking token values
+      if (token.phoneCountry && token.phoneNumber && token.username) {
+        token.needsProfileCompletion = false;
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -129,6 +203,7 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
+    error: '/auth/signin', // Redirect errors to signin page
   },
   secret: process.env.NEXTAUTH_SECRET,
 }; 

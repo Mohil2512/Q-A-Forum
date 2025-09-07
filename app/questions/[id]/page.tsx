@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   FiThumbsUp, 
@@ -15,7 +16,9 @@ import {
   FiTag,
   FiImage,
   FiEdit,
-  FiTrash2
+  FiTrash2,
+  FiStar,
+  FiTrendingUp
 } from 'react-icons/fi';
 import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -420,46 +423,68 @@ export default function QuestionPage() {
   const hasDownvotedQuestion = session && question.votes.downvotes.includes(session.user.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-black">
       <Header />
       
       <main className="container-responsive py-8">
-        {/* Question Header */}
-        <div className="card mb-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">
+          <Link href="/questions" className="hover:text-[#58a6ff] transition-colors">
+            Questions
+          </Link>
+          <span>/</span>
+          <span className="text-gray-300 truncate max-w-md">{question.title}</span>
+        </nav>
+
+        {/* Question Card */}
+        <div className="card mb-6 hover-lift transition-all duration-300">
+          {/* Question Header */}
           <div className="p-6 border-b border-white/10">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-100 mb-2">{question.title}</h1>
-                <div className="flex items-center space-x-4 text-sm text-gray-400">
-                  <div className="flex items-center space-x-1">
+                <h1 className="text-2xl lg:text-3xl font-bold text-white mb-4 leading-tight">{question.title}</h1>
+                
+                {/* Question Meta Info */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-2">
                     <FiClock className="w-4 h-4" />
                     <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
                   </div>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-2">
                     <FiEye className="w-4 h-4" />
-                    <span>{question.views} views</span>
+                    <span>{question.views.toLocaleString()} views</span>
                   </div>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-2">
                     <FiMessageSquare className="w-4 h-4" />
-                    <span>{answers.length} answers</span>
+                    <span>{answers.length} {answers.length === 1 ? 'answer' : 'answers'}</span>
                   </div>
+                  {question.isAccepted && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <FiCheck className="w-4 h-4" />
+                      <span>Solved</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Action Buttons */}
               {canEditOrDelete(question.author) && (
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => router.push(`/questions/${question._id}/edit`)}
-                    className="btn btn-outline flex items-center gap-2"
+                    className="btn btn-outline flex items-center gap-2 text-sm"
                     title="Edit question"
                   >
-                    <FiEdit className="w-4 h-4" /> Edit
+                    <FiEdit className="w-4 h-4" />
+                    Edit
                   </button>
                   <button
                     onClick={handleDeleteQuestion}
-                    className="btn btn-outline text-red-400 border-red-400 flex items-center gap-2"
+                    className="btn btn-outline text-red-400 border-red-400 hover:bg-red-400/10 flex items-center gap-2 text-sm"
                     title="Delete question"
                   >
-                    <FiTrash2 className="w-4 h-4" /> Delete
+                    <FiTrash2 className="w-4 h-4" />
+                    Delete
                   </button>
                 </div>
               )}
@@ -468,64 +493,84 @@ export default function QuestionPage() {
 
           {/* Question Content */}
           <div className="p-6">
-            <div className="flex gap-6">
+            <div className="grid grid-cols-12 gap-6">
               {/* Vote Controls */}
-              <div className="flex flex-col items-center space-y-2">
-                <button
-                  onClick={() => handleVote('question', question._id, 'upvote')}
-                  className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
-                    hasUpvotedQuestion ? 'text-green-400 bg-green-400/10' : 'text-gray-400'
-                  }`}
-                  disabled={!session}
-                  title="Upvote"
-                >
-                  <FiThumbsUp className="w-6 h-6" />
-                </button>
-                <div className="flex flex-col items-center space-y-1">
-                  <span className="text-sm font-medium text-green-400">
-                    {question.votes.upvotes.length}
-                  </span>
-                  <span className="text-xl font-bold text-gray-100">
-                    {questionVoteCount}
-                  </span>
-                  <span className="text-sm font-medium text-red-400">
-                    {question.votes.downvotes.length}
-                  </span>
+              <div className="col-span-12 lg:col-span-1 order-2 lg:order-1">
+                <div className="flex lg:flex-col items-center lg:items-center justify-center lg:justify-start space-x-4 lg:space-x-0 lg:space-y-3">
+                  <button
+                    onClick={() => handleVote('question', question._id, 'upvote')}
+                    className={`p-3 rounded-xl transition-all duration-300 ${
+                      hasUpvotedQuestion 
+                        ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
+                        : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
+                    }`}
+                    disabled={!session}
+                    title={!session ? "Sign in to vote" : "Upvote"}
+                  >
+                    <FiThumbsUp className="w-6 h-6" />
+                  </button>
+                  
+                  <div className="text-center">
+                    <div className="text-xs text-green-400 font-medium mb-1">
+                      {question.votes.upvotes.length}
+                    </div>
+                    <div className={`text-2xl font-bold ${
+                      questionVoteCount > 0 ? 'text-green-400' : 
+                      questionVoteCount < 0 ? 'text-red-400' : 'text-gray-300'
+                    }`}>
+                      {questionVoteCount > 0 ? '+' : ''}{questionVoteCount}
+                    </div>
+                    <div className="text-xs text-red-400 font-medium mt-1">
+                      {question.votes.downvotes.length}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleVote('question', question._id, 'downvote')}
+                    className={`p-3 rounded-xl transition-all duration-300 ${
+                      hasDownvotedQuestion 
+                        ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
+                        : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
+                    }`}
+                    disabled={!session}
+                    title={!session ? "Sign in to vote" : "Downvote"}
+                  >
+                    <FiThumbsDown className="w-6 h-6" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleVote('question', question._id, 'downvote')}
-                  className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
-                    hasDownvotedQuestion ? 'text-red-400 bg-red-400/10' : 'text-gray-400'
-                  }`}
-                  disabled={!session}
-                  title="Downvote"
-                >
-                  <FiThumbsDown className="w-6 h-6" />
-                </button>
               </div>
 
               {/* Content */}
-              <div className="flex-1">
+              <div className="col-span-12 lg:col-span-11 order-1 lg:order-2">
+                {/* Question Description */}
+                {question.shortDescription && (
+                  <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4 mb-6">
+                    <p className="text-gray-300 text-base leading-relaxed">{question.shortDescription}</p>
+                  </div>
+                )}
+
+                {/* Question Content */}
                 <div 
-                  className="prose max-w-none mb-6 text-gray-100 leading-relaxed"
+                  className="prose prose-lg max-w-none mb-6 text-gray-100 prose-headings:text-white prose-strong:text-white prose-code:text-purple-300 prose-pre:bg-[#1a1625] prose-pre:border prose-pre:border-white/10"
                   dangerouslySetInnerHTML={{ __html: question.content }}
                 />
 
                 {/* Images */}
                 {question.images && question.images.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-100 mb-3 flex items-center">
-                      <FiImage className="w-4 h-4 mr-2" />
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      <FiImage className="w-5 h-5 mr-2 text-purple-400" />
                       Attached Images
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {question.images.map((image, index) => (
-                        <div key={index} className="border border-white/10 rounded-xl overflow-hidden">
+                        <div key={index} className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-purple-500/50 transition-all duration-300">
                           <img
                             src={image}
                             alt={`Question image ${index + 1}`}
-                            className="w-full h-48 object-cover"
+                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
                         </div>
                       ))}
                     </div>
@@ -534,34 +579,51 @@ export default function QuestionPage() {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {question.tags.map((tag) => (
-                    <span 
-                      key={tag} 
-                      className="tag"
+                  {question.tags.map((tag, index) => (
+                    <Link 
+                      key={index}
+                      href={`/questions?tags=${encodeURIComponent(tag)}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 text-purple-300 text-sm font-medium rounded-lg hover:from-purple-500/20 hover:to-blue-500/20 hover:border-purple-400/50 transition-all duration-300"
                     >
-                      <FiTag className="w-3 h-3 mr-1" />
+                      <FiTag className="w-3 h-3" />
                       {tag}
-                    </span>
+                    </Link>
                   ))}
                 </div>
 
                 {/* Author Info */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                      <FiUser className="text-white w-5 h-5" />
+                <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <FiUser className="text-white w-6 h-6" />
+                      </div>
+                      {!question.anonymous && question.author.reputation > 100 && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <FiStar className="w-3 h-3 text-yellow-900" />
+                        </div>
+                      )}
                     </div>
                     <div>
                       {question.anonymous ? (
-                        <div className="font-medium text-gray-100">{question.anonymousName || 'Anonymous'}</div>
+                        <div className="font-semibold text-gray-100 text-lg">{question.anonymousName || 'Anonymous'}</div>
                       ) : (
-                        <a href={`/profile/${question.author._id || question.author}`} className="font-medium text-gray-100 hover:underline">
+                        <Link 
+                          href={`/profile/${question.author._id || question.author}`} 
+                          className="font-semibold text-gray-100 text-lg hover:text-purple-400 transition-colors"
+                        >
                           {question.author.username}
-                        </a>
+                        </Link>
                       )}
-                      {!question.anonymous && (
-                        <div className="text-sm text-gray-400">Reputation: {question.author.reputation}</div>
-                      )}
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
+                        {!question.anonymous && (
+                          <div className="flex items-center gap-1">
+                            <FiTrendingUp className="w-4 h-4" />
+                            <span>{question.author.reputation.toLocaleString()} reputation</span>
+                          </div>
+                        )}
+                        <div>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -572,27 +634,42 @@ export default function QuestionPage() {
 
         {/* Answers Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-6">
-            {answers.length} Answer{answers.length !== 1 ? 's' : ''}
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <FiMessageSquare className="w-5 h-5 text-white" />
+              </div>
+              {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
+            </h2>
+            {answers.length > 0 && (
+              <div className="text-sm text-gray-400">
+                {answers.filter(a => a.isAccepted).length > 0 ? 'Solution found' : 'No accepted answer yet'}
+              </div>
+            )}
+          </div>
 
           {answers.length === 0 ? (
             <div className="card p-8 text-center">
-              <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-100 mb-2">No answers yet</h3>
-              <p className="text-gray-400 mb-4">Be the first to answer this question!</p>
+              <div className="w-16 h-16 bg-gradient-to-r from-gray-600 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiMessageSquare className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No answers yet</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">Be the first to help solve this question and earn reputation points!</p>
               {!session && (
-                <button 
-                  onClick={() => router.push('/auth/signin')}
-                  className="btn btn-primary"
-                >
-                  Sign in to Answer
-                </button>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/auth/signin')}
+                    className="btn btn-primary"
+                  >
+                    Sign in to Answer
+                  </button>
+                  <p className="text-sm text-gray-500">or scroll down to answer anonymously</p>
+                </div>
               )}
             </div>
           ) : (
             <div className="space-y-6">
-              {answers.map((answer) => {
+              {answers.map((answer, index) => {
                 const upvotes = answer.votes?.upvotes ?? [];
                 const downvotes = answer.votes?.downvotes ?? [];
                 const voteCount = upvotes.length - downvotes.length;
@@ -603,86 +680,100 @@ export default function QuestionPage() {
                 return (
                   <div
                     key={answer._id}
-                    className={`card ${
-                      answer.isAccepted ? 'border-2 border-green-500 bg-green-500/5' : ''
+                    className={`card hover-lift transition-all duration-300 ${
+                      answer.isAccepted 
+                        ? 'border-2 border-green-500 bg-gradient-to-r from-green-500/5 to-green-400/5 shadow-lg shadow-green-500/10' 
+                        : 'border border-white/10'
                     }`}
                   >
+                    {answer.isAccepted && (
+                      <div className="bg-gradient-to-r from-green-500 to-green-400 text-white px-4 py-2 text-sm font-medium flex items-center gap-2">
+                        <FiCheck className="w-4 h-4" />
+                        Accepted Answer
+                      </div>
+                    )}
                     <div className="p-6">
-                      <div className="flex gap-6">
+                      <div className="grid grid-cols-12 gap-6">
                         {/* Vote Controls */}
-                        <div className="flex flex-col items-center space-y-2">
-                          <button
-                            onClick={() => handleVote('answer', answer._id, 'upvote')}
-                            className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
-                              hasUpvoted ? 'text-green-400 bg-green-400/10' : 'text-gray-400'
-                            }`}
-                            disabled={!session}
-                            title="Upvote"
-                          >
-                            <FiThumbsUp className="w-6 h-6" />
-                          </button>
-                          <div className="flex flex-col items-center space-y-1">
-                            <span className="text-sm font-medium text-green-400">
-                              {upvotes.length}
-                            </span>
-                            <span className="text-xl font-bold text-gray-100">
-                              {voteCount}
-                            </span>
-                            <span className="text-sm font-medium text-red-400">
-                              {downvotes.length}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleVote('answer', answer._id, 'downvote')}
-                            className={`p-3 rounded-xl hover:bg-white/5 transition-all duration-300 ${
-                              hasDownvoted ? 'text-red-400 bg-red-400/10' : 'text-gray-400'
-                            }`}
-                            disabled={!session}
-                            title="Downvote"
-                          >
-                            <FiThumbsDown className="w-6 h-6" />
-                          </button>
-                          
-                          {/* Accept Answer Button */}
-                          {session && question.author._id === session.user.id && !question.isAccepted && (
+                        <div className="col-span-12 lg:col-span-1 order-2 lg:order-1">
+                          <div className="flex lg:flex-col items-center lg:items-center justify-center lg:justify-start space-x-4 lg:space-x-0 lg:space-y-3">
                             <button
-                              onClick={() => handleAcceptAnswer(answer._id)}
-                              className="p-3 text-green-400 hover:bg-green-400/10 rounded-xl transition-all duration-300"
-                              title="Accept this answer"
+                              onClick={() => handleVote('answer', answer._id, 'upvote')}
+                              className={`p-3 rounded-xl transition-all duration-300 ${
+                                hasUpvoted 
+                                  ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
+                                  : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
+                              }`}
+                              disabled={!session}
+                              title={!session ? "Sign in to vote" : "Upvote"}
                             >
-                              <FiCheck className="w-6 h-6" />
+                              <FiThumbsUp className="w-6 h-6" />
                             </button>
-                          )}
-                          
-                          {answer.isAccepted && (
-                            <div className="p-3 text-green-400 bg-green-400/10 rounded-xl">
-                              <FiCheck className="w-6 h-6" />
+                            
+                            <div className="text-center">
+                              <div className="text-xs text-green-400 font-medium mb-1">
+                                {upvotes.length}
+                              </div>
+                              <div className={`text-2xl font-bold ${
+                                voteCount > 0 ? 'text-green-400' : 
+                                voteCount < 0 ? 'text-red-400' : 'text-gray-300'
+                              }`}>
+                                {voteCount > 0 ? '+' : ''}{voteCount}
+                              </div>
+                              <div className="text-xs text-red-400 font-medium mt-1">
+                                {downvotes.length}
+                              </div>
                             </div>
-                          )}
+                            
+                            <button
+                              onClick={() => handleVote('answer', answer._id, 'downvote')}
+                              className={`p-3 rounded-xl transition-all duration-300 ${
+                                hasDownvoted 
+                                  ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
+                                  : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
+                              }`}
+                              disabled={!session}
+                              title={!session ? "Sign in to vote" : "Downvote"}
+                            >
+                              <FiThumbsDown className="w-6 h-6" />
+                            </button>
+                            
+                            {/* Accept Answer Button */}
+                            {session && question.author._id === session.user.id && !question.isAccepted && (
+                              <button
+                                onClick={() => handleAcceptAnswer(answer._id)}
+                                className="p-3 text-yellow-400 hover:bg-yellow-400/20 rounded-xl transition-all duration-300 shadow-lg hover:shadow-yellow-400/25"
+                                title="Accept this answer"
+                              >
+                                <FiCheck className="w-6 h-6" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {/* Answer Content */}
-                        <div className="flex-1">
+                        <div className="col-span-12 lg:col-span-11 order-1 lg:order-2">
                           <div 
-                            className="prose max-w-none mb-4 text-gray-100 leading-relaxed"
+                            className="prose prose-lg max-w-none mb-6 text-gray-100 prose-headings:text-white prose-strong:text-white prose-code:text-purple-300 prose-pre:bg-[#1a1625] prose-pre:border prose-pre:border-white/10"
                             dangerouslySetInnerHTML={{ __html: answer.content }}
                           />
 
                           {/* Answer Images */}
                           {answer.images && answer.images.length > 0 && (
-                            <div className="mb-4">
-                              <h4 className="text-sm font-medium text-gray-100 mb-3 flex items-center">
-                                <FiImage className="w-4 h-4 mr-2" />
+                            <div className="mb-6">
+                              <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                                <FiImage className="w-5 h-5 mr-2 text-blue-400" />
                                 Attached Images
                               </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {answer.images.map((image, index) => (
-                                  <div key={index} className="border border-white/10 rounded-xl overflow-hidden">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {answer.images.map((image, imgIndex) => (
+                                  <div key={imgIndex} className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-blue-500/50 transition-all duration-300">
                                     <img
                                       src={image}
-                                      alt={`Answer image ${index + 1}`}
-                                      className="w-full h-48 object-cover"
+                                      alt={`Answer image ${imgIndex + 1}`}
+                                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                                     />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
                                   </div>
                                 ))}
                               </div>
@@ -690,47 +781,58 @@ export default function QuestionPage() {
                           )}
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                                <FiUser className="text-white w-4 h-4" />
+                          <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                                  <FiUser className="text-white w-5 h-5" />
+                                </div>
+                                {!answer.anonymous && answer.author.reputation > 100 && (
+                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <FiStar className="w-2.5 h-2.5 text-yellow-900" />
+                                  </div>
+                                )}
                               </div>
                               <div>
                                 {answer.anonymous ? (
-                                  <div className="font-medium text-gray-100">{answer.anonymousName || 'Anonymous'}</div>
+                                  <div className="font-semibold text-gray-100">{answer.anonymousName || 'Anonymous'}</div>
                                 ) : (
-                                  <a href={`/profile/${answer.author._id || answer.author}`} className="font-medium text-gray-100 hover:underline">
+                                  <Link 
+                                    href={`/profile/${answer.author._id || answer.author}`} 
+                                    className="font-semibold text-gray-100 hover:text-blue-400 transition-colors"
+                                  >
                                     {answer.author.username}
-                                  </a>
+                                  </Link>
                                 )}
-                                {!answer.anonymous && (
-                                  <div className="text-sm text-gray-400">Reputation: {answer.author.reputation}</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <div className="text-sm text-gray-400">
-                                {formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}
-                              </div>
-                              {canEdit && (
-                                <div className="flex items-center space-x-2">
-                                  <button
-                                    onClick={() => openEditModal(answer)}
-                                    className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-all duration-300"
-                                    title="Edit answer"
-                                  >
-                                    <FiEdit className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteAnswer(answer._id)}
-                                    className="p-1 text-red-400 hover:bg-red-400/10 rounded transition-all duration-300"
-                                    title="Delete answer"
-                                  >
-                                    <FiTrash2 className="w-4 h-4" />
-                                  </button>
+                                <div className="flex items-center gap-4 text-sm text-gray-400">
+                                  {!answer.anonymous && (
+                                    <div className="flex items-center gap-1">
+                                      <FiTrendingUp className="w-3 h-3" />
+                                      <span>{answer.author.reputation.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                  <div>{formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}</div>
                                 </div>
-                              )}
+                              </div>
                             </div>
+                            {canEdit && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => openEditModal(answer)}
+                                  className="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all duration-300"
+                                  title="Edit answer"
+                                >
+                                  <FiEdit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAnswer(answer._id)}
+                                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all duration-300"
+                                  title="Delete answer"
+                                >
+                                  <FiTrash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -744,132 +846,199 @@ export default function QuestionPage() {
 
         {/* Answer Form */}
         {session ? (
-          <div className="card p-6">
-            <h3 className="text-xl font-bold text-gray-100 mb-4">Your Answer</h3>
-            <label className="flex items-center gap-2 text-[#c8acd6] text-sm mb-4">
-              <input
-                type="checkbox"
-                checked={postAnonymously}
-                onChange={e => setPostAnonymously(e.target.checked)}
-                className="form-checkbox rounded text-purple-500 focus:ring-purple-500"
-              />
-              Post Anonymously
-            </label>
-            <form onSubmit={handleSubmitAnswer}>
-              <RichTextEditor
-                value={answerContent}
-                onChange={setAnswerContent}
-                placeholder="Write your answer here..."
-                className="mb-4"
-              />
-              
-              {/* Image Upload */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Attach Images (optional)
+          <div className="card hover-lift transition-all duration-300">
+            <div className="border-b border-white/10 p-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <FiEdit className="w-5 h-5 text-white" />
+                </div>
+                Write Your Answer
+              </h3>
+              <p className="text-gray-400 mt-2">Share your knowledge and help the community</p>
+            </div>
+            <div className="p-6">
+              <div className="mb-6">
+                <label className="flex items-center gap-3 text-purple-300 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    checked={postAnonymously}
+                    onChange={e => setPostAnonymously(e.target.checked)}
+                    className="form-checkbox rounded text-purple-500 focus:ring-purple-500 bg-transparent border-purple-500"
+                  />
+                  <span className="flex items-center gap-2">
+                    <FiUser className="w-4 h-4" />
+                    Post Anonymously
+                  </span>
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(handleImageUpload);
-                  }}
-                  className="input"
-                />
-                {answerImages.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {answerImages.map((image, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={image}
-                          alt={`Preview ${index + 1}`}
-                          className="w-16 h-16 object-cover rounded-xl border border-white/10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
-                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
-                        >
-                          ×
-                        </button>
+              </div>
+              
+              <form onSubmit={handleSubmitAnswer} className="space-y-6">
+                <div>
+                  <RichTextEditor
+                    value={answerContent}
+                    onChange={setAnswerContent}
+                    placeholder="Write your detailed answer here... Be specific and provide examples when possible."
+                    className="mb-4"
+                  />
+                </div>
+                
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <FiImage className="w-4 h-4" />
+                    Attach Images (optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      files.forEach(handleImageUpload);
+                    }}
+                    className="input"
+                  />
+                  {answerImages.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Attached Images:</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {answerImages.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 shadow-lg"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={submittingAnswer || !answerContent.trim()}
-                  className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submittingAnswer ? 'Posting...' : 'Post Answer'}
-                </button>
-              </div>
-            </form>
+                <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                  <div className="text-sm text-gray-400">
+                    By posting, you agree to our community guidelines
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingAnswer || !answerContent.trim()}
+                    className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {submittingAnswer ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        <FiMessageSquare className="w-4 h-4" />
+                        Post Answer
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         ) : (
-          <div className="card p-6 text-center">
-            <h3 className="text-xl font-bold text-gray-100 mb-2">Want to answer this question?</h3>
-            <p className="text-gray-400 mb-4">You can answer anonymously, or sign in for full features and reputation.</p>
-            <form onSubmit={handleSubmitAnswer} className="space-y-4">
-              <RichTextEditor
-                value={answerContent}
-                onChange={setAnswerContent}
-                placeholder="Write your answer here..."
-                className="mb-4"
-              />
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Attach Images (optional)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(handleImageUpload);
-                  }}
-                  className="input"
-                />
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {answerImages.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={image}
-                        alt={`Preview ${index + 1}`}
-                        className="w-16 h-16 object-cover rounded-xl border border-white/10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
+          <div className="card hover-lift transition-all duration-300">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FiMessageSquare className="w-8 h-8 text-white" />
               </div>
-              <button
-                type="submit"
-                disabled={submittingAnswer || !answerContent.trim()}
-                className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full"
-              >
-                {submittingAnswer ? 'Posting...' : 'Answer Anonymously'}
-              </button>
-            </form>
-            <div className="my-4 text-gray-400">or</div>
-            <button 
-              onClick={() => router.push('/auth/signin')}
-              className="btn btn-outline w-full"
-            >
-              Sign In to Answer
-            </button>
+              <h3 className="text-xl font-bold text-white mb-3">Want to answer this question?</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">You can answer anonymously for quick help, or sign in for full features and reputation points.</p>
+              
+              <form onSubmit={handleSubmitAnswer} className="space-y-6 max-w-2xl mx-auto">
+                <div>
+                  <RichTextEditor
+                    value={answerContent}
+                    onChange={setAnswerContent}
+                    placeholder="Write your answer here... Help the community with your knowledge!"
+                    className="mb-4"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <FiImage className="w-4 h-4" />
+                    Attach Images (optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      files.forEach(handleImageUpload);
+                    }}
+                    className="input"
+                  />
+                  {answerImages.length > 0 && (
+                    <div className="mt-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {answerImages.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 shadow-lg"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    type="submit"
+                    disabled={submittingAnswer || !answerContent.trim()}
+                    className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
+                  >
+                    {submittingAnswer ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        <FiUser className="w-4 h-4" />
+                        Answer Anonymously
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => router.push('/auth/signin')}
+                    className="btn btn-outline flex items-center gap-2 justify-center"
+                  >
+                    <FiUser className="w-4 h-4" />
+                    Sign In to Answer
+                  </button>
+                </div>
+                
+                <div className="text-sm text-gray-500 text-center">
+                  Sign in to earn reputation points and access more features
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </main>
@@ -877,49 +1046,95 @@ export default function QuestionPage() {
       {/* Edit Answer Modal */}
       {editingAnswer && (
         <Modal isOpen={!!editingAnswer} onClose={closeEditModal}>
-          <div className="p-6 w-full max-w-lg">
-            <h3 className="text-xl font-bold text-gray-100 mb-4">Edit Your Answer</h3>
-            <RichTextEditor
-              value={editContent}
-              onChange={setEditContent}
-              placeholder="Edit your answer here..."
-              className="mb-4"
-            />
-            {/* Image editing UI (optional, simple for now) */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Attached Images
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {editImages.map((image, idx) => (
-                  <div key={idx} className="relative">
-                    <img src={image} alt="Edit preview" className="w-16 h-16 object-cover rounded-xl border border-white/10" />
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="card">
+              <div className="border-b border-white/10 p-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                    <FiEdit className="w-5 h-5 text-white" />
+                  </div>
+                  Edit Your Answer
+                </h3>
+                <p className="text-gray-400 mt-2">Update your answer to help the community better</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <RichTextEditor
+                      value={editContent}
+                      onChange={setEditContent}
+                      placeholder="Edit your answer here..."
+                      className="mb-4"
+                    />
+                  </div>
+                  
+                  {/* Image editing UI */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                      <FiImage className="w-4 h-4" />
+                      Attached Images
+                    </label>
+                    {editImages.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {editImages.map((image, idx) => (
+                          <div key={idx} className="relative group">
+                            <img 
+                              src={image} 
+                              alt="Edit preview" 
+                              className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300" 
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 shadow-lg"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg border border-white/10">
+                        <FiImage className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-400 text-sm">No images attached</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-6 border-t border-white/10">
+                  <div className="text-sm text-gray-400">
+                    Changes will be saved immediately
+                  </div>
+                  <div className="flex gap-3">
                     <button
-                      type="button"
-                      onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-400 transition-all duration-300"
+                      onClick={closeEditModal}
+                      className="btn btn-outline"
+                      disabled={editLoading}
                     >
-                      ×
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitEdit}
+                      className="btn btn-primary flex items-center gap-2"
+                      disabled={editLoading || !editContent.trim()}
+                    >
+                      {editLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck className="w-4 h-4" />
+                          Save Changes
+                        </>
+                      )}
                     </button>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={closeEditModal}
-                className="btn btn-outline"
-                disabled={editLoading}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitEdit}
-                className="btn btn-primary"
-                disabled={editLoading || !editContent.trim()}
-              >
-                {editLoading ? 'Saving...' : 'Save Changes'}
-              </button>
             </div>
           </div>
         </Modal>
