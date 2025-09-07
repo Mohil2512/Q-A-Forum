@@ -4,6 +4,8 @@ import { authOptions } from '../auth/[...nextauth]/authOptions';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {

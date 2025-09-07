@@ -5,6 +5,8 @@ import dbConnect from '@/lib/mongodb';
 import Question from '@/models/Question';
 import User from '@/models/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();

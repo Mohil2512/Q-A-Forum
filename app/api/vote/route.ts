@@ -6,6 +6,8 @@ import Question from '@/models/Question';
 import Answer from '@/models/Answer';
 import User from '@/models/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

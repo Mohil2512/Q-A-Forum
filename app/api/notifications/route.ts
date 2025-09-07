@@ -5,6 +5,8 @@ import dbConnect from '@/lib/mongodb';
 import Notification from '@/models/Notification';
 import pusher from '@/lib/pusher';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

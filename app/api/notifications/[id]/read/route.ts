@@ -4,6 +4,8 @@ import { authOptions } from '../../../auth/[...nextauth]/authOptions';
 import dbConnect from '@/lib/mongodb';
 import Notification from '@/models/Notification';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
