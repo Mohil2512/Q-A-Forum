@@ -109,115 +109,202 @@ export default function Header() {
   };
 
   return (
-    <header className={`sticky top-0 w-full border-b border-[#2e236c] shadow-lg z-50 transition-all duration-300 ${scrolled ? 'bg-black/60' : 'bg-black/80'}`}>
-      <div className="container-responsive flex items-center justify-between gap-4 py-3 px-2 mx-auto">
+    <header className={`sticky top-0 w-full border-b border-[#2e236c] shadow-lg z-50 transition-all duration-300 ${scrolled ? 'bg-black/60' : 'bg-black/80'} backdrop-blur-xl`}>
+      <div className="container-responsive">
+        <div className="flex items-center justify-between py-3 sm:py-4">
+          {/* Mobile Menu Button */}
+          <button 
+            className="sm:hidden p-2 text-gray-300 hover:text-white transition-colors"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+          </button>
+
           {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <span className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl w-12 h-12 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">S</span>
-          </span>
-          <span className="text-2xl font-bold gradient-text ml-2">StackIt</span>
-        </Link>
-          {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md mx-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-300"
-            />
-            <button type="submit" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" /></svg>
-            </button>
-              </div>
+          <Link href="/" className="flex items-center gap-2 sm:gap-3">
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex items-center justify-center">
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-white">S</span>
+            </span>
+            <span className="text-lg sm:text-xl lg:text-2xl font-bold gradient-text hidden xs:block">StackIt</span>
+          </Link>
+
+          {/* Desktop Search Bar - Hidden on mobile */}
+          <form onSubmit={handleSearchSubmit} className="hidden md:block flex-1 max-w-md mx-4 lg:mx-8">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 sm:py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-300 text-sm sm:text-base"
+              />
+              <button type="submit" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300">
+                <FiSearch className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
           </form>
-        {/* Navigation */}
-        <nav className="flex items-center gap-8">
-          <Link href="/questions" className="text-lg font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors">Questions</Link>
-          <Link href="/tags" className="text-lg font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors">Tags</Link>
-        </nav>
-        {/* Auth Section */}
-        <div className="flex items-center gap-4">
-          {session ? (
-            <>
-              {/* Notifications */}
-              <NotificationDropdown />
-              
-              {/* Ask Question Button */}
-              <Link 
-                href="/questions/ask" 
-                className="btn btn-primary px-4 py-2 text-sm flex items-center gap-2"
-              >
-                <FiPlus className="w-4 h-4" />
-                Ask
-              </Link>
 
-              {/* User Profile Dropdown */}
-              <div className="relative" ref={profileDropdownRef}>
-                <button 
-                  onClick={handleProfileToggle}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
+          {/* Desktop Navigation - Hidden on mobile */}
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+            <Link href="/questions" className="text-sm xl:text-base font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors whitespace-nowrap">Questions</Link>
+            <Link href="/tags" className="text-sm xl:text-base font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors whitespace-nowrap">Tags</Link>
+          </nav>
+
+          {/* Auth Section */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {session ? (
+              <>
+                {/* Notifications - Hidden on small screens */}
+                <div className="hidden sm:block">
+                  <NotificationDropdown />
+                </div>
+                
+                {/* Ask Question Button */}
+                <Link 
+                  href="/questions/ask" 
+                  className="btn btn-primary px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm flex items-center gap-1 sm:gap-2"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
-                    <span className="text-sm font-semibold text-white">
-                      {session.user?.username?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                  <span className="text-gray-200 font-medium hidden sm:block">
-                    {session.user?.displayName || session.user?.username || session.user?.email?.split('@')[0] || 'User'}
-                  </span>
-                </button>
+                  <FiPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline">Ask</span>
+                </Link>
 
-                {/* Profile Dropdown Menu */}
-                {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#1a1625]/95 backdrop-blur-sm border border-white/10 rounded-xl shadow-xl py-2 z-50">
-                    <div className="px-4 py-3 border-b border-white/10">
-                      <p className="text-sm font-medium text-gray-200">
-                        {session.user?.displayName || session.user?.username || 'User'}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        {session.user?.email}
-                      </p>
+                {/* User Profile Dropdown */}
+                <div className="relative" ref={profileDropdownRef}>
+                  <button 
+                    onClick={handleProfileToggle}
+                    className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
+                  >
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                      <span className="text-xs sm:text-sm font-semibold text-white">
+                        {session.user?.username?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}
+                      </span>
                     </div>
-                    
-                    <Link 
-                      href="/profile" 
-                      className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 transition-colors"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                    >
-                      <FiUser className="w-4 h-4" />
-                      Profile
-                    </Link>
-                    
-                    <Link 
-                      href="/profile/edit" 
-                      className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 transition-colors"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                    >
-                      <FiSettings className="w-4 h-4" />
-                      Settings
-                    </Link>
-                    
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-white/5 transition-colors w-full text-left"
-                    >
-                      <FiLogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
+                    <span className="text-gray-200 font-medium hidden md:block text-sm lg:text-base">
+                      {session.user?.displayName || session.user?.username || session.user?.email?.split('@')[0] || 'User'}
+                    </span>
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-[#1a1625]/95 backdrop-blur-sm border border-white/10 rounded-xl shadow-xl py-2 z-50">
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-sm font-medium text-gray-200 truncate">
+                          {session.user?.displayName || session.user?.username || 'User'}
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-400 truncate">
+                          {session.user?.email}
+                        </p>
+                      </div>
+                      
+                      <Link 
+                        href="/profile" 
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/5 transition-colors"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        <FiUser className="w-4 h-4" />
+                        Profile
+                      </Link>
+                      
+                      <Link 
+                        href="/profile/edit" 
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/5 transition-colors"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        <FiSettings className="w-4 h-4" />
+                        Settings
+                      </Link>
+                      
+                      {/* Mobile-only notification link */}
+                      <div className="sm:hidden">
+                        <Link 
+                          href="#notifications"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/5 transition-colors"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          <FiBell className="w-4 h-4" />
+                          Notifications
+                        </Link>
+                      </div>
+                      
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors w-full text-left"
+                      >
+                        <FiLogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Link href="/auth/signin" className="btn btn-outline px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">Sign In</Link>
+                <Link href="/auth/signup" className="btn btn-primary px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">Sign Up</Link>
               </div>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/signin" className="btn btn-outline px-5 py-2 text-base">Sign In</Link>
-              <Link href="/auth/signup" className="btn btn-primary px-5 py-2 text-base">Sign Up</Link>
-            </>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        <div className="md:hidden pb-3">
+          <form onSubmit={handleSearchSubmit} className="w-full">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-300"
+              />
+              <button type="submit" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FiSearch className="w-5 h-5" />
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden bg-black/90 backdrop-blur-sm border-t border-white/10 py-4">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                href="/" 
+                className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 rounded-xl transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <FiHome className="w-5 h-5" />
+                Home
+              </Link>
+              <Link 
+                href="/questions" 
+                className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 rounded-xl transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <FiSearch className="w-5 h-5" />
+                Questions
+              </Link>
+              <Link 
+                href="/tags" 
+                className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 rounded-xl transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <FiTag className="w-5 h-5" />
+                Tags
+              </Link>
+              {session?.user?.role === 'admin' && (
+                <Link 
+                  href="/admin-panel" 
+                  className="flex items-center gap-3 px-4 py-2 text-gray-200 hover:bg-white/5 rounded-xl transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FiUsers className="w-5 h-5" />
+                  Admin Panel
+                </Link>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -32,12 +32,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen bg-black text-white`}>
         <ClientProviders>
           <ClientRedirector />
-          {children}
-          <Footer />
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </ClientProviders>
       </body>
     </html>

@@ -27,61 +27,61 @@ export default async function Home() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20">
+      <section className="relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-blue-900/10 to-slate-900/20"></div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23a855f7%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
         
         <div className="container-responsive relative z-10">
           <div className="text-center max-w-5xl mx-auto">
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full text-purple-300 text-sm font-medium mb-8">
-                <FiStar className="w-4 h-4" />
+            <div className="mb-6 sm:mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full text-purple-300 text-xs sm:text-sm font-medium mb-6 sm:mb-8">
+                <FiStar className="w-3 h-3 sm:w-4 sm:h-4" />
                 Trusted by 500+ developers worldwide
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 sm:mb-8 leading-tight">
               <span className="text-white">Ask.</span>{' '}
               <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Learn.</span>{' '}
               <span className="text-white">Grow.</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-10 md:mb-12 max-w-4xl mx-auto leading-relaxed px-4">
               Join the most vibrant developer community where knowledge flows freely. 
               <span className="text-purple-300 font-medium">Get instant answers</span> to your coding questions from experts worldwide.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-14 md:mb-16 px-4">
               {session ? (
                 <Link 
                   href="/questions/ask" 
-                  className="btn btn-primary text-lg px-8 py-4 flex items-center gap-3 justify-center group"
+                  className="btn btn-primary text-sm sm:text-base lg:text-lg px-6 py-3 sm:px-8 sm:py-4 flex items-center gap-2 sm:gap-3 justify-center group w-full sm:w-auto"
                 >
-                  <FiHelpCircle className="w-5 h-5" />
+                  <FiHelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                   Ask a Question
-                  <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <FiArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               ) : (
                 <Link 
                   href="/auth/signin" 
-                  className="btn btn-primary text-lg px-8 py-4 flex items-center gap-3 justify-center group"
+                  className="btn btn-primary text-sm sm:text-base lg:text-lg px-6 py-3 sm:px-8 sm:py-4 flex items-center gap-2 sm:gap-3 justify-center group w-full sm:w-auto"
                 >
-                  <FiZap className="w-5 h-5" />
+                  <FiZap className="w-4 h-4 sm:w-5 sm:h-5" />
                   Get Started Free
-                  <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <FiArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               )}
               <Link 
                 href="/questions" 
-                className="btn btn-outline text-lg px-8 py-4 flex items-center gap-3 justify-center"
+                className="btn btn-outline text-sm sm:text-base lg:text-lg px-6 py-3 sm:px-8 sm:py-4 flex items-center gap-2 sm:gap-3 justify-center w-full sm:w-auto"
               >
-                <FiSearch className="w-5 h-5" />
+                <FiSearch className="w-4 h-4 sm:w-5 sm:h-5" />
                 Explore Questions
               </Link>
             </div>
 
             {/* Live Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto px-4">
               {[
                 { icon: FiHelpCircle, number: '2,500+', label: 'Questions Solved' },
                 { icon: FiMessageSquare, number: '8,300+', label: 'Expert Answers' },
@@ -89,11 +89,11 @@ export default async function Home() {
                 { icon: FiTag, number: '150+', label: 'Tech Topics' }
               ].map((stat, index) => (
                 <div key={index} className="text-center group">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <stat.icon className="w-6 h-6 text-purple-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
-                  <div className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.number}</div>
-                  <div className="text-gray-400 text-sm">{stat.label}</div>
+                  <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1">{stat.number}</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -102,25 +102,25 @@ export default async function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-transparent to-purple-900/5">
+      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-transparent to-purple-900/5">
         <div className="container-responsive">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full text-purple-300 text-sm font-medium mb-6">
-              <FiStar className="w-4 h-4" />
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full text-purple-300 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <FiStar className="w-3 h-3 sm:w-4 sm:h-4" />
               Platform Features
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-white">
               Why Developers Choose{' '}
               <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 StackIt
               </span>
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Experience the most advanced Q&A platform designed specifically for modern developers
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
               {
                 icon: FiSearch,
@@ -147,12 +147,12 @@ export default async function Home() {
                 gradient: 'from-blue-500 to-purple-500'
               }
             ].map((feature, index) => (
-              <div key={index} className="card p-6 text-center hover-lift transition-all duration-300 group">
-                <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className="w-8 h-8 text-white" />
+              <div key={index} className="card p-4 sm:p-6 text-center hover-lift transition-all duration-300 group">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-300 leading-relaxed text-sm">
+                <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">{feature.title}</h3>
+                <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
                   {feature.description}
                 </p>
               </div>

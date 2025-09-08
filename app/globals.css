@@ -35,7 +35,7 @@
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95;
+    @apply px-3 py-2 sm:px-4 sm:py-2 lg:px-6 lg:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base;
   }
   
   .btn-primary {
@@ -48,6 +48,7 @@
   
   .btn-outline {
     @apply border-2 border-purple-500 text-white hover:bg-purple-600 hover:text-white shadow-lg hover:shadow-purple-500/25;
+    @apply border-2 border-purple-500 text-white hover:bg-purple-600 hover:text-white shadow-lg hover:shadow-purple-500/25;
   }
 
   .btn-danger {
@@ -55,24 +56,24 @@
   }
   
   .card {
-    @apply bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-3;
+    @apply bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-3 sm:p-4 lg:p-6;
   }
   
   .input {
-    @apply w-full px-3 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300;
+    @apply w-full px-3 py-2 sm:px-4 sm:py-3 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 text-sm sm:text-base;
   }
   
   .textarea {
-    @apply w-full px-3 py-2 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300;
+    @apply w-full px-3 py-2 sm:px-4 sm:py-3 bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 text-sm sm:text-base;
     resize: vertical;
   }
 
   .tag {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30 hover:from-purple-600/30 hover:to-blue-600/30 transition-all duration-300;
+    @apply inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30 hover:from-purple-600/30 hover:to-blue-600/30 transition-all duration-300;
   }
 
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    @apply inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium;
   }
 
   .badge-success {
@@ -223,15 +224,71 @@
 /* Responsive utilities */
 @layer utilities {
   .container-responsive {
-    @apply max-w-7xl mx-auto px-2 sm:px-3 lg:px-4;
+    @apply max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10;
+  }
+  
+  .container-sm {
+    @apply max-w-3xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+  
+  .container-md {
+    @apply max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
   }
   
   .text-responsive {
     @apply text-sm sm:text-base lg:text-lg;
   }
   
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm md:text-base;
+  }
+  
   .heading-responsive {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold;
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold;
+  }
+  
+  .heading-responsive-lg {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold;
+  }
+  
+  .spacing-responsive {
+    @apply p-2 sm:p-4 md:p-6 lg:p-8;
+  }
+  
+  .spacing-responsive-sm {
+    @apply p-1 sm:p-2 md:p-3 lg:p-4;
+  }
+  
+  .gap-responsive {
+    @apply gap-2 sm:gap-3 md:gap-4 lg:gap-6;
+  }
+  
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .grid-responsive-2 {
+    @apply grid grid-cols-1 md:grid-cols-2;
+  }
+  
+  .flex-responsive {
+    @apply flex flex-col sm:flex-row;
+  }
+  
+  .hidden-mobile {
+    @apply hidden sm:block;
+  }
+  
+  .visible-mobile {
+    @apply block sm:hidden;
+  }
+  
+  .sidebar-width {
+    @apply w-full sm:w-64 lg:w-72 xl:w-80;
+  }
+  
+  .main-content {
+    @apply flex-1 sm:ml-64 lg:ml-72 xl:ml-80;
   }
 }
 
