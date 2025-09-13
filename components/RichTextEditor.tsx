@@ -117,9 +117,11 @@ export default function RichTextEditor({
       .then(response => response.json())
       .then(data => {
         if (data.url) {
-          const img = `<img src="${data.url}" alt="Uploaded image" style="max-width: 100%; height: auto;" />`;
+          const img = `<img src="${data.url}" alt="Uploaded image" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
           document.execCommand('insertHTML', false, img);
           updateValue();
+        } else {
+          console.error('Upload failed:', data.error);
         }
       })
       .catch(error => {
@@ -308,8 +310,8 @@ export default function RichTextEditor({
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
         onKeyDown={handleKeyDown}
-        className="p-4 min-h-[200px] focus:outline-none text-[#c9d1d9] prose"
-        style={{ minHeight: '200px' }}
+        className="p-4 min-h-[200px] focus:outline-none text-[#c9d1d9] prose text-left"
+        style={{ minHeight: '200px', textAlign: 'left' }}
         data-placeholder={placeholder}
         suppressContentEditableWarning={true}
       />

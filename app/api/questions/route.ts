@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
     const tag = searchParams.get('tag');
     const search = searchParams.get('search');
     const author = searchParams.get('author');
@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     let query: any = {};
+    let sortObj: any = {};
     
     // Tag filter
     if (tag) {
@@ -38,22 +39,18 @@ export async function GET(request: NextRequest) {
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
+        { content: { $regex: search, $options: 'i' } }
       ];
     }
     
     // Advanced filters
     if (filter === 'unanswered') {
-      query.answers = { $size: 0 };
+      query.answers = 0;
     } else if (filter === 'accepted') {
       query.isAccepted = true;
-    } else if (filter === 'upvoted') {
-      query['votes.upvotes'] = { $exists: true, $ne: [] };
     }
     
     // Build sort object
-    let sortObj: any = {};
     switch (sort) {
       case 'newest':
         sortObj = { createdAt: -1 };
@@ -64,69 +61,69 @@ export async function GET(request: NextRequest) {
       case 'votes':
         sortObj = { 'votes.upvotes': -1 };
         break;
-      case 'views':
-        sortObj = { views: -1 };
-        break;
       default:
         sortObj = { createdAt: -1 };
     }
     
+    // Get questions with simplified logic
     const questions = await Question.find(query)
-      .populate('author', 'username reputation')
       .sort(sortObj)
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // Fetch all tags in one go for mapping
-    const allTags = await (await import('@/models/Tag')).default.find({}).lean();
-    const tagMap = new Map(allTags.map((tag: any) => [tag.name, tag]));
-
-    // Add answer count and vote count to each question
-    const questionsWithStats = await Promise.all(
-      questions.map(async (question) => {
-        const answerCount = await Question.aggregate([
-          { $match: { _id: question._id } },
-          {
-            $lookup: {
-              from: 'answers',
-              localField: '_id',
-              foreignField: 'question',
-              as: 'answers'
-            }
-          },
-          { $unwind: '$answers' },
-          { $count: 'count' }
-        ]);
-
-        const voteCount = (question.votes?.upvotes?.length || 0) - (question.votes?.downvotes?.length || 0);
-        // Map tag names or ObjectIds to tag objects
-        const tags = (question.tags || []).map((tag: any) => {
-          if (typeof tag === 'string' && tagMap.has(tag)) return tagMap.get(tag);
-          if (typeof tag === 'object' && tag && tag._id) {
-            // Try to find by ObjectId
-            const found = allTags.find((t: any) => t._id.toString() === tag._id.toString());
-            if (found) return found;
+    // Process questions to handle authors properly
+    const processedQuestions = await Promise.all(
+      questions.map(async (question: any) => {
+        let authorInfo;
+        
+        if (question.anonymous) {
+          // For anonymous questions, show dummy username
+          authorInfo = {
+            username: question.anonymousName || 'Anonymous',
+            reputation: 0,
+            _id: 'anonymous'
+          };
+        } else if (question.author) {
+          // For regular questions, populate author
+          try {
+            const author = await User.findById(question.author).select('username reputation').lean();
+            authorInfo = author || {
+              username: 'Unknown User',
+              reputation: 0,
+              _id: 'unknown'
+            };
+          } catch (error) {
+            console.error('Error populating author:', error);
+            authorInfo = {
+              username: 'Unknown User',
+              reputation: 0,
+              _id: 'unknown'
+            };
           }
-          // Try to find by stringified ObjectId
-          const foundById = allTags.find((t: any) => t._id.toString() === String(tag));
-          if (foundById) return foundById;
-          // Fallback: show as unknown tag
-          return { name: typeof tag === 'string' ? tag : String(tag) };
-        });
+        } else {
+          // Fallback for missing author
+          authorInfo = {
+            username: 'Unknown User',
+            reputation: 0,
+            _id: 'unknown'
+          };
+        }
+
         return {
           ...question,
-          answers: answerCount[0]?.count || 0,
-          voteCount,
-          tags,
+          author: authorInfo,
+          voteCount: (question.votes?.upvotes?.length || 0) - (question.votes?.downvotes?.length || 0),
+          tags: question.tags || [],
+          answers: question.answers || 0
         };
       })
     );
-    
+
     const total = await Question.countDocuments(query);
     
     return NextResponse.json({
-      questions: questionsWithStats,
+      questions: processedQuestions,
       pagination: {
         page,
         limit,
@@ -146,9 +143,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    
+    // Enhanced authentication check
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Please sign in to ask a question' },
+        { status: 401 }
+      );
+    }
+    
     await dbConnect();
     const body = await request.json();
-    const { title, content, tags, shortDescription, images, anonUserId } = body;
+    const { 
+      title, 
+      content, 
+      tags, 
+      shortDescription, 
+      images, 
+      anonymous, 
+      anonymousDisplayName, 
+      realAuthor 
+    } = body;
 
     if (!title || !content || !tags || tags.length === 0) {
       return NextResponse.json(
@@ -157,67 +172,86 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let authorId;
-    let isAnonymous = false;
-    if (session?.user?.id) {
-      // Authenticated user
-      const user = await User.findById(session.user.id);
-      if (!user || user.isBanned) {
-        return NextResponse.json(
-          { error: 'User not found or banned' },
-          { status: 403 }
-        );
-      }
-      // Check if user is suspended
-      if (user.suspendedUntil && new Date() < user.suspendedUntil) {
-        return NextResponse.json(
-          { error: 'Your account is currently suspended' },
-          { status: 403 }
-        );
-      }
-      authorId = session.user.id;
-    } else if (anonUserId) {
-      // Anonymous user
-      authorId = anonUserId;
-      isAnonymous = true;
-    } else {
+    // Find the authenticated user with better error handling
+    let user;
+    try {
+      user = await User.findById(session.user.id);
+    } catch (error) {
+      console.error('Error finding user:', error);
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: 'Invalid user session. Please sign out and sign in again.' },
+        { status: 400 }
       );
     }
 
-    const question = new Question({
-      title,
-      content,
-      shortDescription: shortDescription || content.substring(0, 200),
-      author: authorId,
-      tags: tags.map((tag: string) => tag.toLowerCase().trim()),
-      images: images || [],
-      answers: 0,
-      views: 0,
-      votes: {
-        upvotes: [],
-        downvotes: []
-      }
-    });
-    await question.save();
-
-    // Only update reputation/stats for authenticated users
-    if (!isAnonymous && session?.user?.id) {
-      const user = await User.findById(session.user.id);
-      user.reputation += 50;
-      user.questionsAsked += 1;
-      await user.save();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User account not found. Please sign out and sign in again.' },
+        { status: 404 }
+      );
+    }
+    
+    if (user.isBanned) {
+      return NextResponse.json(
+        { error: 'Your account has been banned' },
+        { status: 403 }
+      );
+    }
+    
+    // Check if user is suspended
+    if (user.suspendedUntil && new Date() < user.suspendedUntil) {
+      return NextResponse.json(
+        { error: 'Your account is currently suspended' },
+        { status: 403 }
+      );
     }
 
-    const populatedQuestion = await Question.findById(question._id)
-      .populate('author', 'username reputation')
-      .lean();
+    // Create the question
+    const questionData = {
+      title,
+      content,
+      shortDescription,
+      tags,
+      images: images || [],
+      author: anonymous ? null : session.user.id, // Show as anonymous or real user
+      realAuthor: session.user.id, // Always store real author for admin
+      anonymous: anonymous || false,
+      anonymousName: anonymous ? anonymousDisplayName : null,
+      votes: { upvotes: [], downvotes: [] },
+      views: 0,
+      answers: 0,
+      isAccepted: false,
+    };
+    
+    const question = new Question(questionData);
+    await question.save();
+
+    // Update user reputation and stats
+    user.reputation += 50;
+    user.questionsAsked += 1;
+    await user.save();
+
+    // Populate the question for response (show appropriate author)
+    let populatedQuestion: any;
+    if (anonymous) {
+      populatedQuestion = await Question.findById(question._id).lean();
+      if (populatedQuestion) {
+        // Replace author info with anonymous display for response
+        populatedQuestion.author = {
+          username: anonymousDisplayName,
+          reputation: 0,
+          _id: 'anonymous'
+        };
+      }
+    } else {
+      populatedQuestion = await Question.findById(question._id)
+        .populate('author', 'username reputation')
+        .lean();
+    }
 
     return NextResponse.json({
       ...populatedQuestion,
-      reputationGained: isAnonymous ? 0 : 50
+      reputationGained: 50
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating question:', error);

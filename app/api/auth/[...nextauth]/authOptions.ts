@@ -63,7 +63,8 @@ export const authOptions: AuthOptions = {
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
+          response_type: "code",
+          scope: "openid email profile"
         }
       }
     }),
@@ -200,10 +201,36 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      console.log('NextAuth redirect callback:', { url, baseUrl });
+      
+      // If the URL is relative, allow it
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      
+      // If the URL is from our domain, allow it
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      
+      // For OAuth callbacks and successful sign-ins, redirect to questions page
+      return `${baseUrl}/questions`;
+    },
   },
   pages: {
     signIn: '/auth/signin',
     error: '/auth/signin', // Redirect errors to signin page
+    newUser: '/auth/complete-profile', // Redirect new OAuth users to complete profile
+  },
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
+      console.log('NextAuth signIn event:', { 
+        provider: account?.provider, 
+        userEmail: user.email, 
+        isNewUser 
+      });
+    }
   },
   secret: process.env.NEXTAUTH_SECRET,
 }; 

@@ -2,7 +2,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAnswer extends Document {
   content: string;
-  images: string[];
+  images: {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  }[];
   author: mongoose.Types.ObjectId | string;
   question: mongoose.Types.ObjectId;
   votes: {
@@ -25,13 +31,29 @@ const answerSchema = new Schema<IAnswer>({
     minlength: 10,
   },
   images: [{
-    type: String,
-    maxlength: 1024, // 1MB max
+    url: {
+      type: String,
+      required: true,
+    },
+    publicId: {
+      type: String,
+      required: true,
+    },
+    width: {
+      type: Number,
+    },
+    height: {
+      type: Number,
+    },
+    format: {
+      type: String,
+    },
   }],
   author: {
-    type: Schema.Types.Mixed, // Allow ObjectId or string
+    type: Schema.Types.Mixed, // Allow ObjectId or string or null for anonymous
     ref: 'User',
-    required: true,
+    required: false, // Not required for anonymous answers
+    default: null,
   },
   question: {
     type: Schema.Types.ObjectId,

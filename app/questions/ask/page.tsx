@@ -24,6 +24,13 @@ interface QuestionForm {
   content: string;
   tags: string[];
   images: File[];
+  imageData: {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  }[];
 }
 
 export default function AskQuestionPage() {
@@ -35,31 +42,52 @@ export default function AskQuestionPage() {
     shortDescription: '',
     content: '',
     tags: [],
-    images: []
+    images: [],
+    imageData: []
   });
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [postAnonymously, setPostAnonymously] = useState(false);
 
-  // Anonymous ID logic
-  const [anonUserId, setAnonUserId] = useState<string | null>(null);
+  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!session) {
-      let stored = localStorage.getItem('anonUserId');
-      if (!stored) {
-        stored = uuidv4();
-        localStorage.setItem('anonUserId', stored);
-      }
-      setAnonUserId(stored);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (status === 'authenticated' && !session) {
+    if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/questions/ask');
     }
-  }, [session, status, router]);
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login required message if not authenticated
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold mb-4">Login Required</h1>
+          <p className="text-gray-300 mb-6">
+            You need to be logged in to ask questions. Please sign in to continue.
+          </p>
+          <button
+            onClick={() => router.push('/auth/signin?callbackUrl=/questions/ask')}
+            className="btn btn-primary"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (field: keyof QuestionForm, value: string | string[] | File[]) => {
     setFormData(prev => ({
@@ -125,9 +153,9 @@ export default function AskQuestionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Allow anonymous ask
-    if (!session && !anonUserId) {
-      toast.error('Anonymous ID not available. Please refresh and try again.');
+    // Ensure user is authenticated
+    if (!session || !user) {
+      toast.error('You must be logged in to ask questions');
       return;
     }
 
@@ -139,8 +167,15 @@ export default function AskQuestionPage() {
     setLoading(true);
 
     try {
-      // Upload images first
-      const imageUrls: string[] = [];
+      // Upload images first and get Cloudinary data
+      const imageData: {
+        url: string;
+        publicId: string;
+        width?: number;
+        height?: number;
+        format?: string;
+      }[] = [];
+      
       for (const image of formData.images) {
         const formDataImage = new FormData();
         formDataImage.append('image', image);
@@ -151,42 +186,45 @@ export default function AskQuestionPage() {
         });
         
         if (uploadResponse.ok) {
-          const { url } = await uploadResponse.json();
-          imageUrls.push(url);
+          const result = await uploadResponse.json();
+          imageData.push({
+            url: result.url,
+            publicId: result.publicId,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+          });
+        } else {
+          const error = await uploadResponse.json();
+          toast.error(error.error || 'Failed to upload image');
+          return;
         }
       }
 
-      // Prepare anonymous fields if needed
-      let anonymousFields = {};
-      if (session && postAnonymously) {
-        anonymousFields = {
-          anonymous: true,
-          anonymousId: user?.anonymousId || '',
-          anonymousName: user?.anonymousName || 'anon',
-          realAuthor: user?.id,
-        };
-      } else if (!session && anonUserId) {
-        anonymousFields = {
-          anonymous: true,
-          anonymousId: anonUserId,
-          anonymousName: 'anon-guest',
-        };
+      // Generate anonymous display name if posting anonymously
+      const anonymousDisplayName = postAnonymously 
+        ? `Anonymous_${Math.random().toString(36).substr(2, 6).toUpperCase()}`
+        : null;
+
+      // Prepare question data
+      const questionData = {
+        title: formData.title,
+        shortDescription: formData.shortDescription,
+        content: formData.content,
+        tags: formData.tags,
+        images: imageData,
+        anonymous: postAnonymously,
+        anonymousDisplayName: anonymousDisplayName,
+        realAuthor: user.id, // Always store the real user ID
       }
 
-      // Create question
+      // Create question with new authentication system
       const response = await fetch('/api/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: formData.title,
-          shortDescription: formData.shortDescription,
-          content: formData.content,
-          tags: formData.tags,
-          images: imageUrls,
-          ...anonymousFields,
-        }),
+        body: JSON.stringify(questionData),
       });
 
       if (response.ok) {
@@ -204,17 +242,6 @@ export default function AskQuestionPage() {
       setLoading(false);
     }
   };
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-black">
-        <Header />
-        <div className="container-responsive py-8">
-          <div className="text-center text-gray-300">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   if (!session) {
     return (

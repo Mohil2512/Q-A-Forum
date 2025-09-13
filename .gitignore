@@ -60,6 +60,7 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -118,4 +119,34 @@ jspm_packages/
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Additional ignores for this project
+# Image uploads (if stored locally)
+/public/uploads/
+/uploads/
+
+# Database dumps
+*.dump
+*.sql
+
+# IDE specific files
+.history/
+.vscode/settings.json
+
+# PM2 process manager
+.pm2/
+
+# Test results
+test-results/
+playwright-report/
+
+# Storybook build outputs
+storybook-static/
+
+# Generated API documentation
+/docs/api/
+
+# Lock files (choose one based on your preference)
+# package-lock.json  # Uncomment if using yarn
+# yarn.lock  # Uncomment if using npm 

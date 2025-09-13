@@ -6,7 +6,13 @@ export interface IQuestion extends Document {
   shortDescription: string;
   author: mongoose.Types.ObjectId | string;
   tags: string[];
-  images: string[];
+  images: {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  }[];
   votes: {
     upvotes: mongoose.Types.ObjectId[];
     downvotes: mongoose.Types.ObjectId[];
@@ -42,9 +48,10 @@ const questionSchema = new Schema<IQuestion>({
     maxlength: 200,
   },
   author: {
-    type: Schema.Types.Mixed, // Allow ObjectId or string
+    type: Schema.Types.Mixed, // Allow ObjectId or string or null for anonymous
     ref: 'User',
-    required: true,
+    required: false, // Not required for anonymous questions
+    default: null,
   },
   tags: [{
     type: String,
@@ -53,8 +60,23 @@ const questionSchema = new Schema<IQuestion>({
     lowercase: true,
   }],
   images: [{
-    type: String,
-    maxlength: 1024, // 1MB max
+    url: {
+      type: String,
+      required: true,
+    },
+    publicId: {
+      type: String,
+      required: true,
+    },
+    width: {
+      type: Number,
+    },
+    height: {
+      type: Number,
+    },
+    format: {
+      type: String,
+    },
   }],
   votes: {
     upvotes: [{

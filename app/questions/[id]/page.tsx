@@ -32,7 +32,13 @@ interface Question {
   title: string;
   content: string;
   shortDescription: string;
-  images: string[];
+  images: (string | {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  })[];
   author: {
     _id: string;
     username: string;
@@ -56,7 +62,13 @@ interface Question {
 interface Answer {
   _id: string;
   content: string;
-  images: string[];
+  images: (string | {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  })[];
   author: {
     _id: string;
     username: string;
@@ -89,7 +101,8 @@ export default function QuestionPage() {
   const [question, setQuestion] = useState<Question | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [answerContent, setAnswerContent] = useState('');
-  const [answerImages, setAnswerImages] = useState<string[]>([]);
+  const [answerImages, setAnswerImages] = useState<File[]>([]);
+  const [answerImagePreviews, setAnswerImagePreviews] = useState<string[]>([]);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -170,8 +183,8 @@ export default function QuestionPage() {
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session && !anonUserId) {
-      toast.error('Anonymous ID not available. Please refresh and try again.');
+    if (!session) {
+      toast.error('Please sign in to post an answer');
       return;
     }
 
@@ -180,35 +193,28 @@ export default function QuestionPage() {
       return;
     }
 
+    if (answerContent.trim().length < 10) {
+      toast.error(`Answer must be at least 10 characters long. Current length: ${answerContent.trim().length}`);
+      return;
+    }
+
     setSubmittingAnswer(true);
 
     try {
-      let anonymousFields = {};
-      if (session && postAnonymously) {
-        anonymousFields = {
-          anonymous: true,
-          anonymousId: user?.anonymousId || '',
-          anonymousName: user?.anonymousName || 'anon',
-          realAuthor: user?.id,
-        };
-      } else if (!session && anonUserId) {
-        anonymousFields = {
-          anonymous: true,
-          anonymousId: anonUserId,
-          anonymousName: 'anon-guest',
-        };
-      }
+      // Create FormData for proper image handling
+      const formData = new FormData();
+      formData.append('content', answerContent);
+      formData.append('questionId', id as string);
+      formData.append('anonymous', postAnonymously.toString());
+      
+      // Add image files to FormData
+      answerImages.forEach((file, index) => {
+        formData.append('images', file);
+      });
+
       const response = await fetch('/api/answers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: answerContent,
-          questionId: id,
-          images: answerImages,
-          ...anonymousFields,
-        }),
+        body: formData, // Send FormData instead of JSON
       });
 
       if (response.ok) {
@@ -216,6 +222,12 @@ export default function QuestionPage() {
         setAnswers(prev => [newAnswer, ...prev]);
         setAnswerContent('');
         setAnswerImages([]);
+        setAnswerImagePreviews(prev => {
+          // Clean up preview URLs to prevent memory leaks
+          prev.forEach(url => URL.revokeObjectURL(url));
+          return [];
+        });
+        setPostAnonymously(false);
         toast.success('Answer posted successfully!');
       } else {
         const error = await response.json();
@@ -285,26 +297,34 @@ export default function QuestionPage() {
   };
 
   const handleImageUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAnswerImages(prev => [...prev, data.url]);
-        toast.success('Image uploaded successfully');
-      } else {
-        toast.error('Failed to upload image');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+    if (!session) {
+      toast.error('Please sign in to upload images');
+      return;
     }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select only image files');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Each image must be less than 2MB');
+      return;
+    }
+
+    if (answerImages.length >= 2) {
+      toast.error('You can upload a maximum of 2 images per answer');
+      return;
+    }
+
+    // Add file to array and create preview
+    setAnswerImages(prev => [...prev, file]);
+    
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setAnswerImagePreviews(prev => [...prev, previewUrl]);
+    
+    toast.success('Image added successfully');
   };
 
   // Helper to get author id as string
@@ -346,7 +366,13 @@ export default function QuestionPage() {
     }
   };
 
-  const handleEditAnswer = (answerId: string, content?: string, images?: string[]) => {
+  const handleEditAnswer = (answerId: string, content?: string, images?: (string | {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  })[]) => {
     // This function should be called with new content/images when editing
     if (!session && !anonUserId) {
       toast.error('Anonymous ID not available. Please refresh and try again.');
@@ -376,7 +402,13 @@ export default function QuestionPage() {
 
   const [editingAnswer, setEditingAnswer] = useState<Answer | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [editImages, setEditImages] = useState<string[]>([]);
+  const [editImages, setEditImages] = useState<(string | {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  })[]>([]);
   const [editLoading, setEditLoading] = useState(false);
 
   const openEditModal = (answer: Answer) => {
@@ -566,7 +598,7 @@ export default function QuestionPage() {
                       {question.images.map((image, index) => (
                         <div key={index} className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-purple-500/50 transition-all duration-300">
                           <img
-                            src={image}
+                            src={typeof image === 'string' ? image : image.url}
                             alt={`Question image ${index + 1}`}
                             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -598,7 +630,7 @@ export default function QuestionPage() {
                       <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                         <FiUser className="text-white w-6 h-6" />
                       </div>
-                      {!question.anonymous && question.author.reputation > 100 && (
+                      {!question.anonymous && question.author && question.author.reputation > 100 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
                           <FiStar className="w-3 h-3 text-yellow-900" />
                         </div>
@@ -609,14 +641,14 @@ export default function QuestionPage() {
                         <div className="font-semibold text-gray-100 text-lg">{question.anonymousName || 'Anonymous'}</div>
                       ) : (
                         <Link 
-                          href={`/profile/${question.author._id || question.author}`} 
+                          href={`/profile/${question.author?._id || question.author}`} 
                           className="font-semibold text-gray-100 text-lg hover:text-purple-400 transition-colors"
                         >
-                          {question.author.username}
+                          {question.author?.username || 'Unknown User'}
                         </Link>
                       )}
                       <div className="flex items-center gap-4 text-sm text-gray-400">
-                        {!question.anonymous && (
+                        {!question.anonymous && question.author && (
                           <div className="flex items-center gap-1">
                             <FiTrendingUp className="w-4 h-4" />
                             <span>{question.author.reputation.toLocaleString()} reputation</span>
@@ -739,7 +771,7 @@ export default function QuestionPage() {
                             </button>
                             
                             {/* Accept Answer Button */}
-                            {session && question.author._id === session.user.id && !question.isAccepted && (
+                            {session && question.author && question.author._id === session.user.id && !question.isAccepted && (
                               <button
                                 onClick={() => handleAcceptAnswer(answer._id)}
                                 className="p-3 text-yellow-400 hover:bg-yellow-400/20 rounded-xl transition-all duration-300 shadow-lg hover:shadow-yellow-400/25"
@@ -769,7 +801,7 @@ export default function QuestionPage() {
                                 {answer.images.map((image, imgIndex) => (
                                   <div key={imgIndex} className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-blue-500/50 transition-all duration-300">
                                     <img
-                                      src={image}
+                                      src={typeof image === 'string' ? image : image.url}
                                       alt={`Answer image ${imgIndex + 1}`}
                                       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                                     />
@@ -787,7 +819,7 @@ export default function QuestionPage() {
                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
                                   <FiUser className="text-white w-5 h-5" />
                                 </div>
-                                {!answer.anonymous && answer.author.reputation > 100 && (
+                                {!answer.anonymous && answer.author && answer.author.reputation > 100 && (
                                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
                                     <FiStar className="w-2.5 h-2.5 text-yellow-900" />
                                   </div>
@@ -798,14 +830,14 @@ export default function QuestionPage() {
                                   <div className="font-semibold text-gray-100">{answer.anonymousName || 'Anonymous'}</div>
                                 ) : (
                                   <Link 
-                                    href={`/profile/${answer.author._id || answer.author}`} 
+                                    href={`/profile/${answer.author?._id || answer.author}`} 
                                     className="font-semibold text-gray-100 hover:text-blue-400 transition-colors"
                                   >
-                                    {answer.author.username}
+                                    {answer.author?.username || 'Unknown User'}
                                   </Link>
                                 )}
                                 <div className="flex items-center gap-4 text-sm text-gray-400">
-                                  {!answer.anonymous && (
+                                  {!answer.anonymous && answer.author && (
                                     <div className="flex items-center gap-1">
                                       <FiTrendingUp className="w-3 h-3" />
                                       <span>{answer.author.reputation.toLocaleString()}</span>
@@ -902,16 +934,21 @@ export default function QuestionPage() {
                     <div className="mt-4">
                       <h4 className="text-sm font-medium text-gray-300 mb-2">Attached Images:</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {answerImages.map((image, index) => (
+                        {answerImagePreviews.map((preview, index) => (
                           <div key={index} className="relative group">
                             <img
-                              src={image}
+                              src={preview}
                               alt={`Preview ${index + 1}`}
                               className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300"
                             />
                             <button
                               type="button"
-                              onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
+                              onClick={() => {
+                                // Remove image and preview
+                                URL.revokeObjectURL(preview);
+                                setAnswerImages(prev => prev.filter((_, i) => i !== index));
+                                setAnswerImagePreviews(prev => prev.filter((_, i) => i !== index));
+                              }}
                               className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 shadow-lg"
                             >
                               ×
@@ -955,89 +992,25 @@ export default function QuestionPage() {
                 <FiMessageSquare className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Want to answer this question?</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">You can answer anonymously for quick help, or sign in for full features and reputation points.</p>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                Please sign in to post an answer. You can still answer anonymously after logging in if you prefer.
+              </p>
               
-              <form onSubmit={handleSubmitAnswer} className="space-y-6 max-w-2xl mx-auto">
-                <div>
-                  <RichTextEditor
-                    value={answerContent}
-                    onChange={setAnswerContent}
-                    placeholder="Write your answer here... Help the community with your knowledge!"
-                    className="mb-4"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-                    <FiImage className="w-4 h-4" />
-                    Attach Images (optional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      files.forEach(handleImageUpload);
-                    }}
-                    className="input"
-                  />
-                  {answerImages.length > 0 && (
-                    <div className="mt-4">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {answerImages.map((image, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={image}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setAnswerImages(prev => prev.filter((_, i) => i !== index))}
-                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 shadow-lg"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    type="submit"
-                    disabled={submittingAnswer || !answerContent.trim()}
-                    className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
-                  >
-                    {submittingAnswer ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Posting...
-                      </>
-                    ) : (
-                      <>
-                        <FiUser className="w-4 h-4" />
-                        Answer Anonymously
-                      </>
-                    )}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => router.push('/auth/signin')}
-                    className="btn btn-outline flex items-center gap-2 justify-center"
-                  >
-                    <FiUser className="w-4 h-4" />
-                    Sign In to Answer
-                  </button>
-                </div>
-                
-                <div className="text-sm text-gray-500 text-center">
-                  Sign in to earn reputation points and access more features
-                </div>
-              </form>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/auth/signin"
+                  className="btn btn-primary inline-flex items-center gap-2"
+                >
+                  <FiUser className="w-4 h-4" />
+                  Sign In to Answer
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="btn btn-secondary inline-flex items-center gap-2"
+                >
+                  Create Account
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -1080,7 +1053,7 @@ export default function QuestionPage() {
                         {editImages.map((image, idx) => (
                           <div key={idx} className="relative group">
                             <img 
-                              src={image} 
+                              src={typeof image === 'string' ? image : image.url}
                               alt="Edit preview" 
                               className="w-full h-20 object-cover rounded-lg border border-white/10 group-hover:border-purple-500/50 transition-all duration-300" 
                             />

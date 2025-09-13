@@ -31,37 +31,78 @@ This application features a custom InfinityFX-inspired theme with:
 - **Role-based Access**: Master admin and regular admin roles
 - **Analytics Dashboard**: Platform statistics and insights
 
+## 🛠️ Technology Stack
+
+### Frontend
+- **Next.js 14**: React framework with App Router
+- **React 18**: Modern React with hooks and server components
+- **Tailwind CSS**: Utility-first CSS framework
+- **TypeScript**: Type-safe JavaScript
+
+### Backend
+- **Next.js API Routes**: Serverless API endpoints
+- **NextAuth.js**: Authentication with multiple providers
+- **MongoDB**: NoSQL database with Mongoose ODM
+- **Pusher**: Real-time notifications and updates
+
+### Additional Tools
+- **Cloudinary**: Image upload and optimization
+- **Nodemailer**: Email notifications
+- **bcryptjs**: Password hashing
+- **Sharp**: Image processing
+
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
 - Node.js 18+ 
 - MongoDB database
-- npm or yarn
+- npm or yarn package manager
 
 ### 1. Clone and Install
 ```bash
-git clone <repository-url>
-cd QA_Forum
+git clone https://github.com/Mohil2512/Q-A-Forum.git
+cd Q-A-Forum
 npm install
 ```
 
 ### 2. Environment Configuration
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the root directory with the following variables:
 
 ```env
 # Database
 MONGODB_URI=mongodb://localhost:27017/stackit
+# Or use MongoDB Atlas: mongodb+srv://<username>:<password>@cluster.mongodb.net/stackit
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here
 
-# Email (optional)
+# OAuth Providers (Optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+
+# Cloudinary (for image uploads)
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+
+# Email (optional - for notifications)
 EMAIL_SERVER_HOST=smtp.gmail.com
 EMAIL_SERVER_PORT=587
 EMAIL_SERVER_USER=your-email@gmail.com
 EMAIL_SERVER_PASSWORD=your-app-password
 EMAIL_FROM=noreply@stackit.com
+
+# Pusher (for real-time notifications)
+PUSHER_APP_ID=your-pusher-app-id
+PUSHER_KEY=your-pusher-key
+PUSHER_SECRET=your-pusher-secret
+PUSHER_CLUSTER=your-pusher-cluster
+
+# Vercel Analytics (optional)
+VERCEL_ANALYTICS_ID=your-vercel-analytics-id
 ```
 
 ### 3. Database Setup
@@ -151,18 +192,42 @@ After running the database seeding script, you'll have these test accounts:
 ## 📁 Project Structure
 
 ```
-QA_Forum/
+Q-A-Forum/
 ├── app/                    # Next.js 13+ app directory
 │   ├── api/               # API routes
+│   │   ├── admin/         # Admin management APIs
+│   │   ├── auth/          # Authentication APIs
+│   │   ├── questions/     # Question management
+│   │   ├── answers/       # Answer management
+│   │   ├── notifications/ # Notification system
+│   │   └── vote/          # Voting system
 │   ├── auth/              # Authentication pages
 │   ├── questions/         # Question-related pages
 │   ├── profile/           # User profile pages
-│   └── admin-panel/       # Admin panel
-├── components/            # Reusable components
-├── models/               # MongoDB models
-├── lib/                  # Utility functions
-├── scripts/              # Database setup scripts
+│   ├── admin-panel/       # Admin panel interface
+│   └── globals.css        # Global styles with InfinityFX theme
+├── components/            # Reusable React components
+│   ├── Header.tsx         # Navigation header
+│   ├── Footer.tsx         # Site footer
+│   ├── QuestionCard.tsx   # Question display component
+│   ├── RichTextEditor.tsx # Rich text editing
+│   └── NotificationDropdown.tsx
+├── models/               # MongoDB Mongoose models
+│   ├── User.ts           # User schema and model
+│   ├── Question.ts       # Question schema
+│   ├── Answer.ts         # Answer schema
+│   ├── Tag.ts            # Tag schema
+│   └── Notification.ts   # Notification schema
+├── lib/                  # Utility functions and configurations
+│   ├── mongodb.ts        # Database connection
+│   ├── pusher.ts         # Real-time configuration
+│   └── countryCodes.ts   # Country code utilities
+├── scripts/              # Database setup and utilities
+│   └── seed-test-data.ts # Database seeding script
+├── types/                # TypeScript type definitions
+│   └── next-auth.d.ts    # NextAuth type extensions
 └── public/               # Static assets
+    └── favicon.svg       # Site icon
 ```
 
 ## 🎨 Theme Customization
@@ -209,34 +274,143 @@ The InfinityFX theme is implemented through:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push
+1. Fork the repository to your GitHub account
+2. Connect your GitHub repository to Vercel
+3. Set environment variables in Vercel dashboard:
+   - Add all variables from your `.env.local` file
+   - Update `NEXTAUTH_URL` to your production domain
+4. Deploy automatically on push
+
+### Manual Deployment Steps
+```bash
+# Build the application
+npm run build
+
+# Start production server
+npm run start
+```
+
+### Environment Variables for Production
+Make sure to set these in your hosting platform:
+- `MONGODB_URI` - Production MongoDB connection string
+- `NEXTAUTH_URL` - Your production domain URL
+- `NEXTAUTH_SECRET` - Strong secret for production
+- All Cloudinary, Pusher, and OAuth credentials
 
 ### Other Platforms
 - **Netlify**: Configure build settings for Next.js
 - **Railway**: Use Railway's MongoDB integration
 - **DigitalOcean**: Deploy with App Platform
+- **AWS**: Deploy with Amplify or EC2
+
+## 📊 Database Schema
+
+### Collections Overview
+- **users**: User accounts with roles and authentication
+- **questions**: Questions with tags, votes, and metadata
+- **answers**: Answers linked to questions with acceptance status
+- **tags**: Reusable tags for content organization
+- **notifications**: Real-time notification system
 
 ## 🤝 Contributing
 
+We welcome contributions to improve StackIt! Here's how to get started:
+
+### Development Setup
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes following the project structure
+4. Test your changes thoroughly
+5. Commit with descriptive messages: `git commit -m "Add feature: description"`
+6. Push to your fork: `git push origin feature/your-feature-name`
+7. Create a Pull Request with a clear description
+
+### Coding Guidelines
+- Follow TypeScript best practices
+- Use ESLint and Prettier for code formatting
+- Write meaningful commit messages
+- Add comments for complex logic
+- Test your changes before submitting
+
+### Areas for Contribution
+- UI/UX improvements and new themes
+- Additional authentication providers
+- Enhanced admin features
+- Performance optimizations
+- Documentation improvements
+- Bug fixes and security enhancements
+
+## 📈 Performance Features
+
+- **Image Optimization**: Next.js Image component with Cloudinary integration
+- **Code Splitting**: Automatic code splitting with Next.js
+- **Server Components**: React Server Components for better performance
+- **Caching**: Smart caching strategies for API responses
+- **Lazy Loading**: Components and images loaded on demand
+- **Optimized Build**: Production-ready build with minification
+
+## 🔧 Development Commands
+
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+
+# Run linting
+npm run lint
+
+# Seed database with test data
+npm run seed
+
+# Type checking
+npx tsc --noEmit
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License.
 
-## 🆘 Support
+## 🆘 Support & Documentation
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the admin panel guide
+### Getting Help
+- **Issues**: [Create an issue](https://github.com/Mohil2512/Q-A-Forum/issues) for bugs or feature requests
+- **Discussions**: Join community discussions for general questions
+- **Documentation**: Review this README and inline code comments
+- **Admin Guide**: Check the admin panel section above
+
+### Common Issues
+- **Database Connection**: Ensure MongoDB is running and URI is correct
+- **Environment Variables**: Double-check all required variables are set
+- **Build Errors**: Clear `.next` directory and rebuild
+- **Permission Issues**: Run commands with appropriate permissions
+
+### Version Information
+- **Next.js**: 14.0.4+
+- **React**: 18+
+- **Node.js**: 18+ required
+- **MongoDB**: 4.4+ recommended
 
 ---
 
-**Built with ❤️ using Next.js, MongoDB, and the InfinityFX design system**
+**Built with ❤️ using Next.js, MongoDB, TypeScript, and the InfinityFX design system**
+
+---
+
+## 📝 Changelog
+
+### Latest Updates
+- ✅ Complete TypeScript migration
+- ✅ Enhanced admin panel with user management
+- ✅ Real-time notification system with Pusher
+- ✅ Image upload optimization with Cloudinary
+- ✅ Improved security with input validation
+- ✅ Mobile-responsive InfinityFX theme
+- ✅ Advanced search and filtering
+- ✅ Email notification system
+- ✅ OAuth integration (Google, GitHub)
+- ✅ Comprehensive error handling

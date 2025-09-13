@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/authOptions';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
+    // Require authentication for uploads
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'Authentication required for image upload' },
         { status: 401 }
       );
     }
@@ -32,29 +35,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (1MB max)
-    if (file.size > 1024 * 1024) {
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File size must be less than 1MB' },
+        { error: 'File size must be less than 2MB' },
         { status: 400 }
       );
     }
 
-    // For now, we'll return a placeholder URL
-    // In a real application, you would upload to a service like AWS S3, Cloudinary, etc.
-    const fileName = `${Date.now()}-${file.name}`;
-    const imageUrl = `/uploads/${fileName}`;
-
-    // TODO: Implement actual file upload to cloud storage
-    // For development, you might want to save to local storage
-    // For production, use services like AWS S3, Cloudinary, or similar
-
-    return NextResponse.json({
-      url: imageUrl,
-      fileName: fileName,
-      size: file.size,
-      type: file.type
-    });
+    // Upload to Cloudinary
+    try {
+      const uploadResult = await uploadToCloudinary(file, 'qa-forum');
+      
+      return NextResponse.json({
+        url: uploadResult.url,
+        publicId: uploadResult.publicId,
+        width: uploadResult.width,
+        height: uploadResult.height,
+        format: uploadResult.format,
+        size: uploadResult.bytes
+      });
+    } catch (uploadError) {
+      console.error('Cloudinary upload error:', uploadError);
+      return NextResponse.json(
+        { error: 'Failed to upload image to cloud storage' },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('Error uploading image:', error);
