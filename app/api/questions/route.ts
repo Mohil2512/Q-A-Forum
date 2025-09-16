@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 50);
     const tag = searchParams.get('tag');
+    const tags = searchParams.get('tags');
     const search = searchParams.get('search');
     const author = searchParams.get('author');
     const sort = searchParams.get('sort') || 'newest';
@@ -25,9 +26,16 @@ export async function GET(request: NextRequest) {
     let query: any = {};
     let sortObj: any = {};
     
-    // Tag filter
+    // Tag filter - handle both single tag and multiple tags
     if (tag) {
       query.tags = tag;
+    } else if (tags) {
+      const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+      if (tagArray.length === 1) {
+        query.tags = tagArray[0];
+      } else if (tagArray.length > 1) {
+        query.tags = { $in: tagArray };
+      }
     }
     
     // Author filter

@@ -71,6 +71,18 @@ function QuestionsContent() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
 
+  // Initialize from URL parameters
+  useEffect(() => {
+    const tagParam = searchParams.get('tag');
+    if (tagParam) {
+      setSelectedTags([tagParam]);
+    }
+    const tagsParam = searchParams.get('tags');
+    if (tagsParam && !tagParam) {
+      setSelectedTags(tagsParam.split(','));
+    }
+  }, [searchParams]);
+
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -88,7 +100,7 @@ function QuestionsContent() {
   // Listen for changes in search query from URL and refetch questions
   useEffect(() => {
     fetchQuestions();
-  }, [searchParams.get('search')]);
+  }, [searchParams.get('search'), selectedTags, sortBy, filterBy]);
 
   useEffect(() => {
     fetchTags();
@@ -454,8 +466,9 @@ function QuestionsContent() {
                         {question.tags.slice(0, window.innerWidth < 640 ? 2 : 3).map((tag) => (
                           <Link 
                             key={typeof tag === 'string' ? tag : tag.name} 
-                            href={`/tags/${typeof tag === 'string' ? tag : tag.name}`} 
-                            className="tag cursor-pointer text-xs sm:text-sm"
+                            href={`/tags?tag=${encodeURIComponent(typeof tag === 'string' ? tag : tag.name)}`} 
+                            className="tag cursor-pointer text-xs sm:text-sm hover:bg-[#388bfd] transition-colors"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <FiTag className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                             {typeof tag === 'string' ? tag : tag.name}

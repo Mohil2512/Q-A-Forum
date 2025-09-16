@@ -497,6 +497,22 @@ export default function QuestionPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Tags */}
+                {question.tags && question.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {question.tags.map((tag) => (
+                      <Link
+                        key={tag}
+                        href={`/tags?tag=${encodeURIComponent(tag)}`}
+                        className="inline-flex items-center px-3 py-1 rounded-full bg-[#2e236c] text-[#c8acd6] text-xs font-semibold hover:bg-[#433d8b] transition-colors border border-[#322a5c]"
+                      >
+                        <FiTag className="w-3 h-3 mr-1" />
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

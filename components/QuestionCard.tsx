@@ -48,7 +48,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         {question.tags.slice(0, 4).map((tag) => (
           <Link
             key={tag.name}
-            href={`/tags/${tag.name}`}
+            href={`/tags?tag=${encodeURIComponent(tag.name)}`}
             className="px-3 py-1 rounded-full bg-[#2e236c] text-[#c8acd6] text-xs font-semibold hover:bg-[#433d8b] transition-colors border border-[#322a5c]"
             title={tag.description || tag.name}
           >
