@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiTag, FiMessageSquare, FiTrendingUp, FiSearch, FiArrowLeft, FiThumbsUp, FiEye, FiUser } from 'react-icons/fi';
@@ -31,6 +31,32 @@ interface Question {
 }
 
 export default function TagsPage() {
+  return (
+    <div className="min-h-screen bg-[#0d1117]">
+      <Header />
+      <Suspense fallback={
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-[#f0f6fc] mb-2">Tags</h1>
+            <p className="text-[#7d8590]">Loading...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="card p-4 animate-pulse">
+                <div className="h-4 bg-[#21262d] rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-[#21262d] rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        </main>
+      }>
+        <TagsContent />
+      </Suspense>
+    </div>
+  );
+}
+
+function TagsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedTag = searchParams.get('tag');
@@ -106,11 +132,8 @@ export default function TagsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {selectedTag ? (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {selectedTag ? (
           // Show questions for selected tag
           <div>
             <div className="flex items-center mb-6">
@@ -291,6 +314,5 @@ export default function TagsPage() {
           </div>
         )}
       </main>
-    </div>
-  );
+    );
 } 
