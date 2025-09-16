@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiUpload, FiX, FiAlertCircle, FiTag, FiImage, FiEdit3 } from 'react-icons/fi';
-import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -246,7 +245,6 @@ export default function AskQuestionPage() {
   if (!session) {
     return (
       <div className="min-h-screen bg-black">
-        <Header />
         <div className="container-responsive py-8">
           <div className="card text-center max-w-md mx-auto">
             <FiAlertCircle className="mx-auto h-12 w-12 text-purple-500 mb-4" />
@@ -434,8 +432,6 @@ export default function AskQuestionPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <Header />
-      
       <main className="container-responsive py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">Ask a Question</h1>

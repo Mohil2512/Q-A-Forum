@@ -16,6 +16,7 @@ interface Notification {
   createdAt: string;
   relatedQuestion?: string;
   relatedAnswer?: string;
+  relatedUser?: string;
 }
 
 interface NotificationDropdownProps {
@@ -267,17 +268,23 @@ export default function NotificationDropdown({ onClose, onUpdateCount }: Notific
                       </div>
                     </div>
                     
-                    {(notification.relatedQuestion || notification.relatedAnswer) && (
+                    {(notification.relatedQuestion || notification.relatedAnswer || notification.relatedUser) && (
                       <div className="mt-2">
                         <Link
-                          href={notification.relatedQuestion 
-                            ? `/questions/${notification.relatedQuestion}`
-                            : `/answers/${notification.relatedAnswer}`
+                          href={
+                            notification.relatedQuestion 
+                              ? `/questions/${notification.relatedQuestion}`
+                              : notification.relatedAnswer
+                              ? `/answers/${notification.relatedAnswer}`
+                              : `/users/${notification.relatedUser}`
                           }
                           className="text-xs text-[#433d8b] hover:text-[#c8acd6] transition-colors duration-300"
                           onClick={handleClose}
                         >
-                          View related content →
+                          {notification.type === 'follow' || notification.type === 'follow_request' || notification.type === 'follow_accept'
+                            ? 'View profile →'
+                            : 'View related content →'
+                          }
                         </Link>
                       </div>
                     )}

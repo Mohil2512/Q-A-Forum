@@ -26,6 +26,8 @@ export default function EditProfilePage() {
     linkedin: "",
     twitter: "",
     location: "",
+    website: "",
+    isPrivate: false,
   });
   const [errors, setErrors] = useState<{
     phoneCountry?: string;
@@ -49,6 +51,8 @@ export default function EditProfilePage() {
         linkedin: session.user.linkedin || "",
         twitter: session.user.twitter || "",
         location: session.user.location || "",
+        website: session.user.website || "",
+        isPrivate: session.user.isPrivate || false,
       });
     }
   }, [session]);
@@ -56,9 +60,12 @@ export default function EditProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
@@ -281,6 +288,44 @@ export default function EditProfilePage() {
                 maxLength={100}
                 placeholder="City, Country"
               />
+            </div>
+
+            {/* Website */}
+            <div>
+              <label htmlFor="website" className="block text-sm font-medium text-[#c8acd6]">
+                Website (optional)
+              </label>
+              <input
+                id="website"
+                name="website"
+                type="url"
+                value={formData.website}
+                onChange={handleChange}
+                className="input"
+                placeholder="https://yourwebsite.com"
+              />
+            </div>
+
+            {/* Privacy Settings */}
+            <div className="border-t border-[#433d8b]/30 pt-6">
+              <h3 className="text-lg font-medium text-[#c8acd6] mb-4">Privacy Settings</h3>
+              
+              <div className="flex items-center">
+                <input
+                  id="isPrivate"
+                  name="isPrivate"
+                  type="checkbox"
+                  checked={formData.isPrivate}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#433d8b] bg-[#17153b] border-[#433d8b] rounded focus:ring-[#c8acd6] focus:ring-2"
+                />
+                <label htmlFor="isPrivate" className="ml-2 block text-sm text-[#c8acd6]">
+                  Private Profile
+                </label>
+              </div>
+              <p className="mt-1 text-xs text-[#433d8b]">
+                When enabled, only your followers can see your questions, answers, and profile details. Others will need to send a follow request.
+              </p>
             </div>
             <button
               type="submit"

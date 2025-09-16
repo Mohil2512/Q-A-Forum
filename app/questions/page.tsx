@@ -21,7 +21,6 @@ import {
   FiCheck,
   FiX
 } from 'react-icons/fi';
-import Header from '@/components/Header';
 import toast from 'react-hot-toast';
 import { Dialog } from '@headlessui/react';
 
@@ -205,7 +204,6 @@ function QuestionsContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black">
-        <Header />
         <div className="container-responsive py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
@@ -218,8 +216,6 @@ function QuestionsContent() {
 
   return (
     <div className="min-h-screen bg-black">
-      <Header />
-      
       <main className="container-responsive py-4 sm:py-6 lg:py-8">
         {/* Mobile Filter Button */}
         <div className="lg:hidden mb-4">
@@ -542,7 +538,6 @@ export default function QuestionsPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black">
-        <Header />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="mb-4">

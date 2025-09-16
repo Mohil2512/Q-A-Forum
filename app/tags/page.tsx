@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiTag, FiMessageSquare, FiTrendingUp, FiSearch, FiArrowLeft, FiThumbsUp, FiEye, FiUser } from 'react-icons/fi';
-import Header from '@/components/Header';
 
 interface Tag {
   name: string;
@@ -33,7 +32,6 @@ interface Question {
 export default function TagsPage() {
   return (
     <div className="min-h-screen bg-[#0d1117]">
-      <Header />
       <Suspense fallback={
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">

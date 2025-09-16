@@ -17,6 +17,9 @@ declare module 'next-auth' {
       linkedin?: string;
       twitter?: string;
       location?: string;
+      website?: string;
+      isPrivate?: boolean;
+      avatar?: string;
     };
   }
 
@@ -35,6 +38,9 @@ declare module 'next-auth' {
     linkedin?: string;
     twitter?: string;
     location?: string;
+    website?: string;
+    isPrivate?: boolean;
+    avatar?: string;
   }
 }
 
@@ -53,5 +59,8 @@ declare module 'next-auth/jwt' {
     linkedin?: string;
     twitter?: string;
     location?: string;
+    website?: string;
+    isPrivate?: boolean;
+    avatar?: string;
   }
 } 

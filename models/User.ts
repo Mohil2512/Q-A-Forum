@@ -20,6 +20,11 @@ export interface IUser extends Document {
   questionsAsked: number;
   answersGiven: number;
   acceptedAnswers: number;
+  isPrivate: boolean;
+  followers: string[];
+  following: string[];
+  pendingFollowRequests: string[];
+  sentFollowRequests: string[];
   createdAt: Date;
   updatedAt: Date;
   resetPasswordToken?: string;
@@ -131,6 +136,26 @@ const userSchema = new Schema<IUser>({
     type: Number,
     default: 0,
   },
+  isPrivate: {
+    type: Boolean,
+    default: false,
+  },
+  followers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  following: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  pendingFollowRequests: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  sentFollowRequests: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   resetPasswordToken: {
     type: String,
   },

@@ -20,7 +20,6 @@ import {
   FiStar,
   FiTrendingUp
 } from 'react-icons/fi';
-import Header from '@/components/Header';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -435,7 +434,6 @@ export default function QuestionPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <Header />
         <div className="container-responsive py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
@@ -456,8 +454,6 @@ export default function QuestionPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <Header />
-      
       <main className="container-responsive py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">

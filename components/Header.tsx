@@ -109,7 +109,7 @@ export default function Header() {
   };
 
   return (
-    <header className={`sticky top-0 w-full border-b border-[#2e236c] shadow-lg z-50 transition-all duration-300 ${scrolled ? 'bg-black/60' : 'bg-black/80'} backdrop-blur-xl`}>
+    <header className={`sticky top-0 w-full border-b border-[#2e236c] shadow-lg z-50 transition-all duration-300 ${scrolled ? 'bg-black/95' : 'bg-black/90'} backdrop-blur-xl`}>
       <div className="container-responsive">
         <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Mobile Menu Button */}
@@ -212,6 +212,15 @@ export default function Header() {
                       >
                         <FiSettings className="w-4 h-4" />
                         Settings
+                      </Link>
+
+                      <Link 
+                        href="/follow-requests" 
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/5 transition-colors"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        <FiUsers className="w-4 h-4" />
+                        Follow Requests
                       </Link>
                       
                       {/* Mobile-only notification link */}

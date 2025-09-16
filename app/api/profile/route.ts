@@ -6,6 +6,29 @@ import User from '@/models/User';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await dbConnect();
+    const user = await User.findById(session.user.id)
+      .populate('pendingFollowRequests', 'name email avatar')
+      .select('-password -__v');
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
+  }
+}
+
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {
@@ -13,7 +36,7 @@ export async function PUT(request: NextRequest) {
   }
 
   await dbConnect();
-  const { username, email, phoneCountry, phoneNumber, displayName, bio, github, linkedin, twitter, location } = await request.json();
+  const { username, email, phoneCountry, phoneNumber, displayName, bio, github, linkedin, twitter, location, website, isPrivate } = await request.json();
 
   if (!username || !email) {
     return NextResponse.json({ error: 'Username and email are required' }, { status: 400 });
@@ -44,7 +67,7 @@ export async function PUT(request: NextRequest) {
 
     const user = await User.findByIdAndUpdate(
       session.user.id,
-      { username, email, phoneCountry, phoneNumber, displayName, bio, github, linkedin, twitter, location },
+      { username, email, phoneCountry, phoneNumber, displayName, bio, github, linkedin, twitter, location, website, isPrivate },
       { new: true }
     );
     if (!user) {

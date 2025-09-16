@@ -3,11 +3,12 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface INotification extends Document {
   recipient: mongoose.Types.ObjectId;
   sender?: mongoose.Types.ObjectId;
-  type: 'answer' | 'comment' | 'mention' | 'vote' | 'accept' | 'admin';
+  type: 'answer' | 'comment' | 'mention' | 'vote' | 'accept' | 'admin' | 'follow' | 'follow_request' | 'follow_accept';
   title: string;
   message: string;
   relatedQuestion?: mongoose.Types.ObjectId;
   relatedAnswer?: mongoose.Types.ObjectId;
+  relatedUser?: mongoose.Types.ObjectId;
   isRead: boolean;
   createdAt: Date;
 }
@@ -24,7 +25,7 @@ const notificationSchema = new Schema<INotification>({
   },
   type: {
     type: String,
-    enum: ['answer', 'comment', 'mention', 'vote', 'accept', 'admin'],
+    enum: ['answer', 'comment', 'mention', 'vote', 'accept', 'admin', 'follow', 'follow_request', 'follow_accept'],
     required: true,
   },
   title: {
@@ -42,6 +43,10 @@ const notificationSchema = new Schema<INotification>({
   relatedAnswer: {
     type: Schema.Types.ObjectId,
     ref: 'Answer',
+  },
+  relatedUser: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
   },
   isRead: {
     type: Boolean,

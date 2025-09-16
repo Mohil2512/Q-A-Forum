@@ -163,6 +163,15 @@ export const authOptions: AuthOptions = {
         token.reputation = user.reputation;
         token.phoneCountry = (user as any).phoneCountry ?? undefined;
         token.phoneNumber = (user as any).phoneNumber ?? undefined;
+        token.displayName = (user as any).displayName ?? undefined;
+        token.bio = (user as any).bio ?? undefined;
+        token.github = (user as any).github ?? undefined;
+        token.linkedin = (user as any).linkedin ?? undefined;
+        token.twitter = (user as any).twitter ?? undefined;
+        token.location = (user as any).location ?? undefined;
+        token.website = (user as any).website ?? undefined;
+        token.isPrivate = (user as any).isPrivate ?? false;
+        token.avatar = (user as any).avatar ?? undefined;
         // If OAuth, check for missing fields
         if ((account?.provider === 'google' || account?.provider === 'github') && (!user.username || !(user as any).phoneCountry || !(user as any).phoneNumber)) {
           token.needsProfileCompletion = true;
@@ -179,6 +188,15 @@ export const authOptions: AuthOptions = {
           token.phoneCountry = session.user.phoneCountry;
           token.phoneNumber = session.user.phoneNumber;
           token.needsProfileCompletion = session.user.needsProfileCompletion;
+          token.displayName = session.user.displayName;
+          token.bio = session.user.bio;
+          token.github = session.user.github;
+          token.linkedin = session.user.linkedin;
+          token.twitter = session.user.twitter;
+          token.location = session.user.location;
+          token.website = session.user.website;
+          token.isPrivate = session.user.isPrivate;
+          token.avatar = session.user.avatar;
         }
       }
       
@@ -198,6 +216,15 @@ export const authOptions: AuthOptions = {
         session.user.phoneCountry = token.phoneCountry as string | undefined;
         session.user.phoneNumber = token.phoneNumber as string | undefined;
         session.user.needsProfileCompletion = token.needsProfileCompletion;
+        session.user.displayName = token.displayName as string | undefined;
+        session.user.bio = token.bio as string | undefined;
+        session.user.github = token.github as string | undefined;
+        session.user.linkedin = token.linkedin as string | undefined;
+        session.user.twitter = token.twitter as string | undefined;
+        session.user.location = token.location as string | undefined;
+        session.user.website = token.website as string | undefined;
+        session.user.isPrivate = token.isPrivate as boolean | undefined;
+        session.user.avatar = token.avatar as string | undefined;
       }
       return session;
     },

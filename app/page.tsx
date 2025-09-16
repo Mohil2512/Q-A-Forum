@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]/authOptions';
-import Header from '@/components/Header';
 import { 
   FiSearch, 
   FiHelpCircle, 
@@ -24,8 +23,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-black">
-      <Header />
-      
       {/* Hero Section */}
       <section className="relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-blue-900/10 to-slate-900/20"></div>
