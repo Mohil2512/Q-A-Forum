@@ -25,10 +25,10 @@ export async function GET(
     const isOwner = session?.user?.id === user._id.toString();
     
     // Get the current user's actual database ID for accurate comparison
-    let currentUserId = null;
+    let currentUserId: string | null = null;
     if (session?.user?.email) {
       const currentUserFromDB = await User.findOne({ email: session.user.email }).select('_id');
-      currentUserId = currentUserFromDB?._id.toString();
+      currentUserId = currentUserFromDB?._id.toString() || null;
     }
     
     const isFollowing = currentUserId && user.followers?.some((followerId: any) => 

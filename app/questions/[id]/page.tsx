@@ -448,6 +448,11 @@ export default function QuestionPage() {
   };
 
   const handleDeleteQuestion = async () => {
+    if (!question) {
+      toast.error('Question not found');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
       return;
     }
