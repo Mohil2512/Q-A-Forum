@@ -30,7 +30,7 @@ interface User {
   username: string;
   email: string;
   role: string;
-  reputation: number;
+
   isBanned: boolean;
   suspendedUntil?: string;
   suspensionReason?: string;
@@ -375,7 +375,6 @@ export default function AdminPanel() {
                       <tr className="border-b border-[#433d8b]">
                         <th className="text-left py-3 px-4 text-[#c8acd6] font-medium">User</th>
                         <th className="text-left py-3 px-4 text-[#c8acd6] font-medium">Role</th>
-                        <th className="text-left py-3 px-4 text-[#c8acd6] font-medium">Reputation</th>
                         <th className="text-left py-3 px-4 text-[#c8acd6] font-medium">Status</th>
                         <th className="text-left py-3 px-4 text-[#c8acd6] font-medium">Actions</th>
                       </tr>
@@ -398,7 +397,6 @@ export default function AdminPanel() {
                               {user.role}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-[#c8acd6]">{user.reputation}</td>
                           <td className="py-3 px-4">
                             {user.isBanned ? (
                               <span className="badge badge-danger">Banned</span>

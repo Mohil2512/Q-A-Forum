@@ -49,45 +49,49 @@ export async function PUT(
       );
     }
 
-    // Check if question already has an accepted answer
-    if (question.isAccepted) {
-      return NextResponse.json(
-        { error: 'Question already has an accepted answer' },
-        { status: 400 }
-      );
-    }
+    // Toggle acceptance status - allow multiple answers to be accepted
+    const isCurrentlyAccepted = answer.isAccepted;
+    const newAcceptedStatus = !isCurrentlyAccepted;
     
-    // Update answer and question
-    await Promise.all([
-      Answer.findByIdAndUpdate(params.id, { isAccepted: true }),
-      Question.findByIdAndUpdate(question._id, { 
-        isAccepted: true, 
-        acceptedAnswer: params.id 
-      }),
-    ]);
+    // Update answer
+    await Answer.findByIdAndUpdate(params.id, { isAccepted: newAcceptedStatus });
 
-    // Update reputation for answer author (+50 reputation for accepted answer)
-    const answerAuthor = await User.findById(answer.author._id);
-    if (answerAuthor) {
-      answerAuthor.reputation += 50;
-      answerAuthor.acceptedAnswers += 1;
-      await answerAuthor.save();
-    }
-
-    // Create notification for answer author
-    await Notification.create({
-      recipient: answer.author._id,
-      sender: session.user.id,
-      type: 'accept',
-      title: 'Your answer was accepted!',
-      message: `Your answer to "${question.title}" was accepted by the question author.`,
-      relatedQuestion: question._id,
-      relatedAnswer: answer._id,
+    // Update question's isAccepted field based on whether any answers are accepted
+    const acceptedAnswersCount = await Answer.countDocuments({ 
+      question: question._id, 
+      isAccepted: true 
     });
     
+    // If we just accepted this answer, add 1 to count, if we unaccepted, subtract 1
+    const finalAcceptedCount = newAcceptedStatus ? acceptedAnswersCount + 1 : acceptedAnswersCount - 1;
+    
+    await Question.findByIdAndUpdate(question._id, { 
+      isAccepted: finalAcceptedCount > 0
+    });
+
+    // Update author points only when accepting (not when unaccepting)
+    if (newAcceptedStatus) {
+      const answerAuthor = await User.findById(answer.author._id);
+      if (answerAuthor) {
+        answerAuthor.acceptedAnswers += 1;
+        await answerAuthor.save();
+      }
+
+      // Create notification for answer author
+      await Notification.create({
+        recipient: answer.author._id,
+        sender: session.user.id,
+        type: 'accept',
+        title: 'Your answer was accepted!',
+        message: `Your answer to "${question.title}" was accepted by the question author.`,
+        relatedQuestion: question._id,
+        relatedAnswer: answer._id,
+      });
+    }
+    
     return NextResponse.json({ 
-      message: 'Answer accepted successfully',
-      reputationGained: 50
+      message: newAcceptedStatus ? 'Answer accepted successfully' : 'Answer unaccepted successfully',
+      isAccepted: newAcceptedStatus
     });
   } catch (error) {
     console.error('Error accepting answer:', error);

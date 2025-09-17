@@ -84,8 +84,7 @@ export async function PUT(request: NextRequest) {
         phoneCountry: user.phoneCountry,
         phoneNumber: user.phoneNumber,
         displayName: user.displayName,
-        role: user.role,
-        reputation: user.reputation
+        role: user.role
       }
     });
   } catch (error) {

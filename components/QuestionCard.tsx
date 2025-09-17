@@ -16,7 +16,6 @@ interface QuestionCardProps {
     content: string;
     author: {
       username: string;
-      reputation: number;
     };
     tags: Tag[];
     votes: {
@@ -65,13 +64,20 @@ export default function QuestionCard({ question }: QuestionCardProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
         <div className="flex flex-wrap items-center gap-6 w-full justify-between">
           <div className="flex items-center gap-4 flex-wrap text-[#7d8590]">
-            <span className="flex items-center gap-1"><span className="font-medium text-[#c8acd6]">👤 {question.author.username}</span></span>
-            <span className="flex items-center gap-1">⭐ {question.author.reputation}</span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">👤</span>
+              <Link 
+                href={`/users/${question.author.username}`}
+                className="font-medium text-[#c8acd6] hover:text-[#58a6ff] transition-colors"
+              >
+                {question.author.username}
+              </Link>
+            </span>
             <span><FiEye className="inline w-4 h-4 mr-1" />{question.views} views</span>
             <span><FiMessageSquare className="inline w-4 h-4 mr-1" />{question.answers} answers</span>
             <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
           </div>
-          {/* Stats: Upvotes/Downvotes only */}
+          {/* Stats: Upvotes and Downvotes */}
           <div className="flex items-center gap-3 flex-nowrap">
             <span className="flex items-center gap-1 bg-[#2e236c] text-[#58a6ff] px-2 py-1 rounded-full font-bold">
               <FiThumbsUp className="w-4 h-4" />{question.votes.upvotes.length}

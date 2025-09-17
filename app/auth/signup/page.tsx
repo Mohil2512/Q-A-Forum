@@ -24,7 +24,7 @@ function SignUpContent() {
     email: '',
     password: '',
     confirmPassword: '',
-    phoneCountry: '',
+    phoneCountry: '+91', // Initialize with India's code
     phoneNumber: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -237,7 +237,7 @@ function SignUpContent() {
                   id="phoneCountry"
                   name="phoneCountry"
                   required
-                  value={formData.phoneCountry || '+91'}
+                  value={formData.phoneCountry}
                   onChange={e => setFormData({ ...formData, phoneCountry: e.target.value })}
                   className="input"
                 >

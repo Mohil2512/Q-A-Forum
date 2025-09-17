@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../auth/[...nextauth]/authOptions';
+import { authOptions } from '../../../auth/[...nextauth]/authOptions';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 

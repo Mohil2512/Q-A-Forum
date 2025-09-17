@@ -50,7 +50,6 @@ export const authOptions: AuthOptions = {
           email: user.email,
           username: user.username,
           role: user.role,
-          reputation: user.reputation,
           phoneCountry: user.phoneCountry,
           phoneNumber: user.phoneNumber,
         };
@@ -128,7 +127,6 @@ export const authOptions: AuthOptions = {
                 provider: account.provider,
                 providerId: profileId,
                 role: 'user',
-                reputation: 0,
                 // Don't set password for OAuth users
               });
               console.log('Successfully created OAuth user:', dbUser.email);
@@ -143,7 +141,6 @@ export const authOptions: AuthOptions = {
           user.id = dbUser._id.toString();
           user.username = dbUser.username;
           user.role = dbUser.role;
-          user.reputation = dbUser.reputation;
           user.phoneCountry = dbUser.phoneCountry;
           user.phoneNumber = dbUser.phoneNumber;
         }
@@ -160,7 +157,6 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.username = user.username;
         token.role = user.role;
-        token.reputation = user.reputation;
         token.phoneCountry = (user as any).phoneCountry ?? undefined;
         token.phoneNumber = (user as any).phoneNumber ?? undefined;
         token.displayName = (user as any).displayName ?? undefined;
@@ -212,7 +208,6 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
         session.user.role = token.role as string;
-        session.user.reputation = token.reputation as number;
         session.user.phoneCountry = token.phoneCountry as string | undefined;
         session.user.phoneNumber = token.phoneNumber as string | undefined;
         session.user.needsProfileCompletion = token.needsProfileCompletion;

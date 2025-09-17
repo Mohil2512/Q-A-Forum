@@ -7,7 +7,7 @@ declare module 'next-auth' {
       email: string;
       username: string;
       role: string;
-      reputation: number;
+
       phoneCountry?: string;
       phoneNumber?: string;
       needsProfileCompletion?: boolean;
@@ -28,7 +28,6 @@ declare module 'next-auth' {
     email: string;
     username: string;
     role: string;
-    reputation: number;
     phoneCountry?: string;
     phoneNumber?: string;
     needsProfileCompletion?: boolean;
@@ -49,7 +48,6 @@ declare module 'next-auth/jwt' {
     id: string;
     username: string;
     role: string;
-    reputation: number;
     phoneCountry?: string;
     phoneNumber?: string;
     needsProfileCompletion?: boolean;

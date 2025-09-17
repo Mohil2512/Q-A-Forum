@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   FiThumbsUp, 
-  FiThumbsDown, 
+  FiThumbsDown,
   FiCheck, 
   FiMessageSquare, 
   FiEye, 
@@ -16,9 +16,7 @@ import {
   FiTag,
   FiImage,
   FiEdit,
-  FiTrash2,
-  FiStar,
-  FiTrendingUp
+  FiTrash2
 } from 'react-icons/fi';
 import RichTextEditor from '@/components/RichTextEditor';
 import toast from 'react-hot-toast';
@@ -71,7 +69,6 @@ interface Answer {
   author: {
     _id: string;
     username: string;
-    reputation: number;
   };
   votes: {
     upvotes: string[];
@@ -252,12 +249,18 @@ export default function QuestionPage() {
       });
 
       if (response.ok) {
-        setAnswers(prev => prev.map(answer => ({
-          ...answer,
-          isAccepted: answer._id === answerId
-        })));
-        setQuestion(prev => prev ? { ...prev, isAccepted: true, acceptedAnswer: answerId } : null);
-        toast.success('Answer accepted!');
+        const result = await response.json();
+        setAnswers(prev => prev.map(answer => 
+          answer._id === answerId 
+            ? { ...answer, isAccepted: result.isAccepted }
+            : answer
+        ));
+        
+        // Update question's accepted status
+        const hasAccepted = answers.some(a => a._id === answerId ? result.isAccepted : a.isAccepted);
+        setQuestion(prev => prev ? { ...prev, isAccepted: hasAccepted } : null);
+        
+        toast.success(result.message);
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to accept answer');
@@ -328,42 +331,6 @@ export default function QuestionPage() {
 
   // Helper to get author id as string
   const getAuthorId = (author: any) => typeof author === 'string' ? author : author?._id;
-  // Helper to check if current user (session or anon) can edit/delete a post
-  const canEditOrDelete = (author: any) => {
-    const authorId = getAuthorId(author);
-    if (session && session.user.id === authorId) return true;
-    if (!session && anonUserId && authorId === anonUserId) return true;
-    return false;
-  };
-
-  const handleDeleteQuestion = async () => {
-    if (!session && !anonUserId) {
-      toast.error('Anonymous ID not available. Please refresh and try again.');
-      return;
-    }
-    if (!confirm('Are you sure you want to delete this question?')) {
-      return;
-    }
-    try {
-      const response = await fetch(`/api/questions/${id}`,
-        {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: session ? undefined : JSON.stringify({ anonUserId }),
-        }
-      );
-      if (response.ok) {
-        toast.success('Question deleted successfully');
-        router.push('/questions');
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to delete question');
-      }
-    } catch (error) {
-      console.error('Error deleting question:', error);
-      toast.error('Failed to delete question');
-    }
-  };
 
   const handleEditAnswer = (answerId: string, content?: string, images?: (string | {
     url: string;
@@ -444,8 +411,76 @@ export default function QuestionPage() {
     );
   }
 
+  // Check if current user can edit/delete content
+  const canEditOrDelete = (author: any) => {
+    if (!session || !author) return false;
+    
+    // Check if it's the same user (for regular users)
+    if (session.user.id === author._id) return true;
+    
+    // Check anonymous users
+    if (author.anonymousId && user?.anonymousId === author.anonymousId) return true;
+    
+    // Check if user is admin
+    if (session.user.role === 'admin' || session.user.role === 'master') return true;
+    
+    return false;
+  };
+
+  const getAuthorDisplay = (author: any, anonymous: boolean, anonymousId?: string, anonymousName?: string) => {
+    if (anonymous && anonymousName) {
+      return (
+        <span className="text-[#c8acd6] font-medium">
+          {anonymousName} (Anonymous)
+        </span>
+      );
+    } else if (author?.username) {
+      return (
+        <Link 
+          href={`/users/${author.username}`}
+          className="text-[#c8acd6] hover:text-[#58a6ff] transition-colors font-medium"
+        >
+          {author.username}
+        </Link>
+      );
+    }
+    return <span className="text-gray-400">Unknown User</span>;
+  };
+
+  const handleDeleteQuestion = async () => {
+    if (!confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/questions/${question._id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        toast.success('Question deleted successfully');
+        router.push('/questions');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to delete question');
+      }
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      toast.error('Failed to delete question');
+    }
+  };
+
+  // Add null check before using question
   if (!question) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="container-responsive py-8">
+          <div className="text-center">
+            <p className="text-gray-400">Question not found</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const questionVoteCount = question.votes.upvotes.length - question.votes.downvotes.length;
@@ -475,8 +510,12 @@ export default function QuestionPage() {
                 {/* Question Meta Info */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                   <div className="flex items-center gap-2">
+                    <FiUser className="w-4 h-4" />
+                    <span>Asked by {getAuthorDisplay(question.author, question.anonymous, question.anonymousId, question.anonymousName)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <FiClock className="w-4 h-4" />
-                    <span>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                    <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FiEye className="w-4 h-4" />
@@ -541,46 +580,47 @@ export default function QuestionPage() {
               {/* Vote Controls */}
               <div className="col-span-12 lg:col-span-1 order-2 lg:order-1">
                 <div className="flex lg:flex-col items-center lg:items-center justify-center lg:justify-start space-x-4 lg:space-x-0 lg:space-y-3">
-                  <button
-                    onClick={() => handleVote('question', question._id, 'upvote')}
-                    className={`p-3 rounded-xl transition-all duration-300 ${
-                      hasUpvotedQuestion 
-                        ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
-                        : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
-                    }`}
-                    disabled={!session}
-                    title={!session ? "Sign in to vote" : "Upvote"}
-                  >
-                    <FiThumbsUp className="w-6 h-6" />
-                  </button>
-                  
-                  <div className="text-center">
-                    <div className="text-xs text-green-400 font-medium mb-1">
-                      {question.votes.upvotes.length}
-                    </div>
-                    <div className={`text-2xl font-bold ${
-                      questionVoteCount > 0 ? 'text-green-400' : 
-                      questionVoteCount < 0 ? 'text-red-400' : 'text-gray-300'
-                    }`}>
-                      {questionVoteCount > 0 ? '+' : ''}{questionVoteCount}
-                    </div>
-                    <div className="text-xs text-red-400 font-medium mt-1">
-                      {question.votes.downvotes.length}
+                  {/* Upvote */}
+                  <div className="flex lg:flex-col items-center space-x-2 lg:space-x-0 lg:space-y-1">
+                    <button
+                      onClick={() => handleVote('question', question._id, 'upvote')}
+                      className={`p-3 rounded-xl transition-all duration-300 ${
+                        hasUpvotedQuestion 
+                          ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
+                          : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
+                      }`}
+                      disabled={!session}
+                      title={!session ? "Sign in to vote" : "Upvote"}
+                    >
+                      <FiThumbsUp className="w-6 h-6" />
+                    </button>
+                    <div className="text-center">
+                      <div className="text-xs text-green-400 font-medium">
+                        {question.votes.upvotes.length}
+                      </div>
                     </div>
                   </div>
                   
-                  <button
-                    onClick={() => handleVote('question', question._id, 'downvote')}
-                    className={`p-3 rounded-xl transition-all duration-300 ${
-                      hasDownvotedQuestion 
-                        ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
-                        : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
-                    }`}
-                    disabled={!session}
-                    title={!session ? "Sign in to vote" : "Downvote"}
-                  >
-                    <FiThumbsDown className="w-6 h-6" />
-                  </button>
+                  {/* Downvote */}
+                  <div className="flex lg:flex-col items-center space-x-2 lg:space-x-0 lg:space-y-1">
+                    <button
+                      onClick={() => handleVote('question', question._id, 'downvote')}
+                      className={`p-3 rounded-xl transition-all duration-300 ${
+                        hasDownvotedQuestion 
+                          ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
+                          : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
+                      }`}
+                      disabled={!session}
+                      title={!session ? "Sign in to vote" : "Downvote"}
+                    >
+                      <FiThumbsDown className="w-6 h-6" />
+                    </button>
+                    <div className="text-center">
+                      <div className="text-xs text-red-400 font-medium">
+                        {question.votes.downvotes.length}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -642,30 +682,19 @@ export default function QuestionPage() {
                       <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                         <FiUser className="text-white w-6 h-6" />
                       </div>
-                      {!question.anonymous && question.author && question.author.reputation > 100 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-                          <FiStar className="w-3 h-3 text-yellow-900" />
-                        </div>
-                      )}
                     </div>
                     <div>
                       {question.anonymous ? (
                         <div className="font-semibold text-gray-100 text-lg">{question.anonymousName || 'Anonymous'}</div>
                       ) : (
                         <Link 
-                          href={`/profile/${question.author?._id || question.author}`} 
+                          href={`/users/${question.author?.username || question.author}`} 
                           className="font-semibold text-gray-100 text-lg hover:text-purple-400 transition-colors"
                         >
                           {question.author?.username || 'Unknown User'}
                         </Link>
                       )}
                       <div className="flex items-center gap-4 text-sm text-gray-400">
-                        {!question.anonymous && question.author && (
-                          <div className="flex items-center gap-1">
-                            <FiTrendingUp className="w-4 h-4" />
-                            <span>{question.author.reputation.toLocaleString()} reputation</span>
-                          </div>
-                        )}
                         <div>Asked {formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</div>
                       </div>
                     </div>
@@ -698,7 +727,7 @@ export default function QuestionPage() {
                 <FiMessageSquare className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">No answers yet</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">Be the first to help solve this question and earn reputation points!</p>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">Be the first to help solve this question!</p>
               {!session && (
                 <div className="space-y-3">
                   <button 
@@ -741,53 +770,58 @@ export default function QuestionPage() {
                         {/* Vote Controls */}
                         <div className="col-span-12 lg:col-span-1 order-2 lg:order-1">
                           <div className="flex lg:flex-col items-center lg:items-center justify-center lg:justify-start space-x-4 lg:space-x-0 lg:space-y-3">
-                            <button
-                              onClick={() => handleVote('answer', answer._id, 'upvote')}
-                              className={`p-3 rounded-xl transition-all duration-300 ${
-                                hasUpvoted 
-                                  ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
-                                  : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
-                              }`}
-                              disabled={!session}
-                              title={!session ? "Sign in to vote" : "Upvote"}
-                            >
-                              <FiThumbsUp className="w-6 h-6" />
-                            </button>
-                            
-                            <div className="text-center">
-                              <div className="text-xs text-green-400 font-medium mb-1">
-                                {upvotes.length}
-                              </div>
-                              <div className={`text-2xl font-bold ${
-                                voteCount > 0 ? 'text-green-400' : 
-                                voteCount < 0 ? 'text-red-400' : 'text-gray-300'
-                              }`}>
-                                {voteCount > 0 ? '+' : ''}{voteCount}
-                              </div>
-                              <div className="text-xs text-red-400 font-medium mt-1">
-                                {downvotes.length}
+                            {/* Upvote */}
+                            <div className="flex lg:flex-col items-center space-x-2 lg:space-x-0 lg:space-y-1">
+                              <button
+                                onClick={() => handleVote('answer', answer._id, 'upvote')}
+                                className={`p-3 rounded-xl transition-all duration-300 ${
+                                  hasUpvoted 
+                                    ? 'text-green-400 bg-green-400/20 shadow-lg shadow-green-400/25' 
+                                    : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
+                                }`}
+                                disabled={!session}
+                                title={!session ? "Sign in to vote" : "Upvote"}
+                              >
+                                <FiThumbsUp className="w-6 h-6" />
+                              </button>
+                              <div className="text-center">
+                                <div className="text-xs text-green-400 font-medium">
+                                  {upvotes.length}
+                                </div>
                               </div>
                             </div>
                             
-                            <button
-                              onClick={() => handleVote('answer', answer._id, 'downvote')}
-                              className={`p-3 rounded-xl transition-all duration-300 ${
-                                hasDownvoted 
-                                  ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
-                                  : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
-                              }`}
-                              disabled={!session}
-                              title={!session ? "Sign in to vote" : "Downvote"}
-                            >
-                              <FiThumbsDown className="w-6 h-6" />
-                            </button>
+                            {/* Downvote */}
+                            <div className="flex lg:flex-col items-center space-x-2 lg:space-x-0 lg:space-y-1">
+                              <button
+                                onClick={() => handleVote('answer', answer._id, 'downvote')}
+                                className={`p-3 rounded-xl transition-all duration-300 ${
+                                  hasDownvoted 
+                                    ? 'text-red-400 bg-red-400/20 shadow-lg shadow-red-400/25' 
+                                    : 'text-gray-400 hover:text-red-400 hover:bg-red-400/10'
+                                }`}
+                                disabled={!session}
+                                title={!session ? "Sign in to vote" : "Downvote"}
+                              >
+                                <FiThumbsDown className="w-6 h-6" />
+                              </button>
+                              <div className="text-center">
+                                <div className="text-xs text-red-400 font-medium">
+                                  {downvotes.length}
+                                </div>
+                              </div>
+                            </div>
                             
                             {/* Accept Answer Button */}
-                            {session && question.author && question.author._id === session.user.id && !question.isAccepted && (
+                            {session && question.author && question.author._id === session.user.id && (
                               <button
                                 onClick={() => handleAcceptAnswer(answer._id)}
-                                className="p-3 text-yellow-400 hover:bg-yellow-400/20 rounded-xl transition-all duration-300 shadow-lg hover:shadow-yellow-400/25"
-                                title="Accept this answer"
+                                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                                  answer.isAccepted 
+                                    ? 'text-green-400 bg-green-400/20 hover:bg-green-400/30 hover:shadow-green-400/25'
+                                    : 'text-yellow-400 hover:bg-yellow-400/20 hover:shadow-yellow-400/25'
+                                }`}
+                                title={answer.isAccepted ? "Remove acceptance" : "Accept this answer"}
                               >
                                 <FiCheck className="w-6 h-6" />
                               </button>
@@ -831,30 +865,20 @@ export default function QuestionPage() {
                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
                                   <FiUser className="text-white w-5 h-5" />
                                 </div>
-                                {!answer.anonymous && answer.author && answer.author.reputation > 100 && (
-                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                                    <FiStar className="w-2.5 h-2.5 text-yellow-900" />
-                                  </div>
-                                )}
+
                               </div>
                               <div>
                                 {answer.anonymous ? (
                                   <div className="font-semibold text-gray-100">{answer.anonymousName || 'Anonymous'}</div>
                                 ) : (
                                   <Link 
-                                    href={`/profile/${answer.author?._id || answer.author}`} 
+                                    href={`/users/${answer.author?.username || answer.author}`} 
                                     className="font-semibold text-gray-100 hover:text-blue-400 transition-colors"
                                   >
                                     {answer.author?.username || 'Unknown User'}
                                   </Link>
                                 )}
                                 <div className="flex items-center gap-4 text-sm text-gray-400">
-                                  {!answer.anonymous && answer.author && (
-                                    <div className="flex items-center gap-1">
-                                      <FiTrendingUp className="w-3 h-3" />
-                                      <span>{answer.author.reputation.toLocaleString()}</span>
-                                    </div>
-                                  )}
                                   <div>{formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}</div>
                                 </div>
                               </div>

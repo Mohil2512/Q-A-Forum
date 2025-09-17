@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import dbConnect from '@/lib/mongodb';
 import Answer from '@/models/Answer';
 import User from '@/models/User';
+import Question from '@/models/Question';
 
 export async function PUT(
   request: NextRequest,
@@ -90,7 +91,18 @@ export async function DELETE(
         { status: 403 }
       );
     }
+    
+    // Store the question ID before deleting the answer
+    const questionId = answer.question;
+    
     await Answer.findByIdAndDelete(params.id);
+    
+    // Decrement the answers counter on the question
+    await Question.findByIdAndUpdate(
+      questionId,
+      { $inc: { answers: -1 } }
+    );
+    
     return NextResponse.json({ message: 'Answer deleted successfully' });
   } catch (error) {
     console.error('Error deleting answer:', error);

@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaUser, FaQuestion, FaComment, FaTrophy, FaCalendar, FaEdit } from 'react-icons/fa';
+import { FaUser, FaQuestion, FaComment, FaCalendar, FaEdit } from 'react-icons/fa';
 
 interface Question {
   _id: string;
@@ -66,17 +66,7 @@ export default function ProfilePage() {
     }
   };
 
-  const calculateReputation = () => {
-    const questionVotes = questions.reduce((total, q) => 
-      total + (q.votes.upvotes.length - q.votes.downvotes.length), 0
-    );
-    const answerVotes = answers.reduce((total, a) => 
-      total + (a.votes.upvotes.length - a.votes.downvotes.length), 0
-    );
-    const acceptedBonus = answers.filter(a => a.isAccepted).length * 15;
-    
-    return (session?.user?.reputation || 0) + questionVotes + answerVotes + acceptedBonus;
-  };
+
 
   if (!session) {
     return (
@@ -103,10 +93,6 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold gradient-text">{session.user.username}</h1>
             <p className="text-[#c8acd6]">{session.user.email}</p>
             <div className="flex items-center space-x-4 mt-2">
-              <div className="flex items-center space-x-1">
-                <FaTrophy className="text-yellow-500" />
-                <span className="text-sm text-[#c8acd6]">Reputation: {calculateReputation()}</span>
-              </div>
               <div className="flex items-center space-x-1">
                 <FaCalendar className="text-[#433d8b]" />
                 <span className="text-sm text-[#c8acd6]">Member since {new Date().toLocaleDateString()}</span>
@@ -143,8 +129,8 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="card p-6 flex items-center space-x-3">
-            <div className="w-12 h-12 bg-yellow-100 bg-opacity-20 rounded-lg flex items-center justify-center">
-              <FaTrophy className="text-yellow-600" />
+            <div className="w-12 h-12 bg-green-100 bg-opacity-20 rounded-lg flex items-center justify-center">
+              <span className="text-green-600 text-2xl">✓</span>
             </div>
             <div>
               <p className="text-2xl font-bold gradient-text">

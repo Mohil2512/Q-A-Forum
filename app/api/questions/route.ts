@@ -11,6 +11,12 @@ export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     
+    // Fix any questions that might not have the answers field
+    await Question.updateMany(
+      { answers: { $exists: false } },
+      { $set: { answers: 0 } }
+    );
+    
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 50);
@@ -18,13 +24,10 @@ export async function GET(request: NextRequest) {
     const tags = searchParams.get('tags');
     const search = searchParams.get('search');
     const author = searchParams.get('author');
-    const sort = searchParams.get('sort') || 'newest';
-    const filter = searchParams.get('filter') || 'all';
     
     const skip = (page - 1) * limit;
     
     let query: any = {};
-    let sortObj: any = {};
     
     // Tag filter - handle both single tag and multiple tags
     if (tag) {
@@ -51,29 +54,10 @@ export async function GET(request: NextRequest) {
       ];
     }
     
-    // Advanced filters
-    if (filter === 'unanswered') {
-      query.answers = 0;
-    } else if (filter === 'accepted') {
-      query.isAccepted = true;
-    }
+    // Default sort by newest
+    const sortObj = { createdAt: -1 as const };
     
-    // Build sort object
-    switch (sort) {
-      case 'newest':
-        sortObj = { createdAt: -1 };
-        break;
-      case 'popular':
-        sortObj = { views: -1 };
-        break;
-      case 'votes':
-        sortObj = { 'votes.upvotes': -1 };
-        break;
-      default:
-        sortObj = { createdAt: -1 };
-    }
-    
-    // Get questions with simplified logic
+    // Get questions
     const questions = await Question.find(query)
       .sort(sortObj)
       .skip(skip)

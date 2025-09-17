@@ -4,6 +4,19 @@
 
 A modern, feature-rich Q&A platform built with Next.js, featuring the InfinityFX UI theme with glassmorphism effects and a sophisticated color palette.
 
+## 🆕 Latest Updates
+
+### Version 2.0 - December 2024
+- **✅ Question Edit Page**: Added comprehensive question editing functionality
+- **✅ Multiple Answer Acceptance**: Users can now accept multiple answers per question
+- **✅ Simplified Voting**: Restored separate upvote/downvote display for better user engagement
+- **✅ Reputation-Free**: Eliminated complex reputation system for better user focus
+- **✅ Enhanced UI**: Streamlined interfaces with improved user experience
+- **✅ Universal Search**: Instagram/Twitter-style search across users, questions, and tags
+- **✅ Profile Image Upload**: Complete avatar management with Cloudinary integration
+- **✅ Username-Based Profiles**: Clean `/users/username` URLs for better SEO
+- **✅ Clickable Usernames**: All user references link to profile pages
+
 ## 🎨 InfinityFX Theme
 
 This application features a custom InfinityFX-inspired theme with:
@@ -17,13 +30,13 @@ This application features a custom InfinityFX-inspired theme with:
 
 ### Core Functionality
 - **User Authentication**: Secure sign-in/sign-up with NextAuth.js
-- **Question Management**: Ask, edit, and manage questions
-- **Answer System**: Provide and accept answers
-- **Voting System**: Upvote/downvote questions and answers
-- **Search & Filter**: Advanced search with real-time results
+- **Question Management**: Ask, edit, and manage questions with full CRUD operations
+- **Answer System**: Provide and accept multiple answers per question
+- **Voting System**: Separate upvote/downvote displays for questions and answers
+- **Universal Search**: Instagram/Twitter-style search across users, questions, and tags
 - **Tag System**: Organize content with tags
 - **Notifications**: Real-time notification system
-- **User Profiles**: Comprehensive user profiles with statistics
+- **User Profiles**: Comprehensive username-based profiles with avatar upload
 - **Follow System**: Follow other users and manage privacy settings
 - **Profile Privacy**: Private profiles with follower approval
 - **Follow Requests**: Send and manage follow requests
@@ -179,7 +192,13 @@ After running the database seeding script, you'll have these test accounts:
 - ✅ **Responsive Design**: Mobile-optimized interface
 
 ### Functional Improvements
-- ✅ **Independent Vote Counters**: Separate upvote/downvote displays
+- ✅ **Universal Search System**: Instagram/Twitter-style search across users, questions, and tags
+- ✅ **Profile Avatar Upload**: Complete image management with Cloudinary integration and validation
+- ✅ **Username-Based Profiles**: Clean `/users/username` URLs for better SEO and user experience
+- ✅ **Clickable Usernames**: All user references throughout the platform link to profile pages
+- ✅ **Separate Vote Displays**: Individual upvote/downvote counts with visual distinction
+- ✅ **Multiple Answer Acceptance**: Allow multiple accepted answers per question
+- ✅ **Question Edit Page**: Full question editing functionality with authentication
 - ✅ **Enhanced Search**: Debounced search with real-time results
 - ✅ **Notification System**: Real-time notifications with proper counts
 - ✅ **Answer Acceptance**: Fixed authentication for accepting answers
@@ -189,6 +208,7 @@ After running the database seeding script, you'll have these test accounts:
 - ✅ **Privacy Controls**: Private profiles with follower approval system
 - ✅ **Follow System**: Follow/unfollow users with pending request management
 - ✅ **Sticky Header**: Globally sticky navigation header
+- ✅ **Streamlined UI**: Removed redundant settings option from header dropdown
 
 ### Technical Fixes
 - ✅ **Database Seeding**: Comprehensive test data script
@@ -208,10 +228,15 @@ Q-A-Forum/
 │   │   ├── questions/     # Question management
 │   │   ├── answers/       # Answer management
 │   │   ├── notifications/ # Notification system
+│   │   ├── follow/        # Follow system APIs
+│   │   ├── follow-requests/ # Follow request management
+│   │   ├── users/         # User profile APIs
 │   │   └── vote/          # Voting system
 │   ├── auth/              # Authentication pages
 │   ├── questions/         # Question-related pages
 │   ├── profile/           # User profile pages
+│   ├── users/             # Public user profile pages
+│   ├── follow-requests/   # Follow request management page
 │   ├── admin-panel/       # Admin panel interface
 │   └── globals.css        # Global styles with InfinityFX theme
 ├── components/            # Reusable React components
@@ -412,6 +437,16 @@ This project is licensed under the MIT License.
 ## 📝 Changelog
 
 ### Latest Updates (September 2025)
+- ✅ **Universal Search System**: Instagram/Twitter-style search across users, questions, and tags in header
+- ✅ **Profile Avatar Upload**: Complete image management with drag-and-drop, validation, and Cloudinary integration
+- ✅ **Username-Based User Profiles**: Clean `/users/username` URLs for better SEO and user experience
+- ✅ **Clickable Usernames**: All user references throughout the platform now link to profile pages
+- ✅ **Separate Vote Displays**: Individual upvote/downvote counts with green/red visual distinction
+- ✅ **Streamlined Header Menu**: Removed redundant settings option, consolidated profile management
+- ✅ **Advanced User Profile System**: Complete follow functionality with privacy controls
+- ✅ **Follow System**: Follow/unfollow users, pending request management, private profiles
+- ✅ **Enhanced Notification System**: Follow notifications, request notifications
+- ✅ **Sticky Header**: Globally sticky navigation header across all pages
 - ✅ **Enhanced Tags System**: Complete tag browsing with search and filtering
 - ✅ **Tag Navigation**: Clickable tags throughout the application
 - ✅ **Individual Question Tags**: Tags display in question detail pages

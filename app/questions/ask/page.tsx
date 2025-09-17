@@ -250,7 +250,7 @@ export default function AskQuestionPage() {
             <FiAlertCircle className="mx-auto h-12 w-12 text-purple-500 mb-4" />
             <h2 className="text-xl font-semibold gradient-text mb-2">Ask Anonymously or Sign In</h2>
             <p className="text-gray-300 mb-4">
-              You can ask a question anonymously, or sign in for full features and reputation.
+              You can ask a question anonymously, or sign in for full features.
             </p>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}

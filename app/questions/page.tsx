@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   FiSearch, 
-  FiFilter, 
   FiPlus, 
   FiEye, 
   FiMessageSquare, 
@@ -18,11 +17,9 @@ import {
   FiUser,
   FiTrendingUp,
   FiStar,
-  FiCheck,
-  FiX
+  FiCheck
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { Dialog } from '@headlessui/react';
 
 interface Tag {
   name: string;
@@ -39,7 +36,6 @@ interface Question {
   author: {
     _id: string;
     username: string;
-    reputation: number;
   };
   tags: (string | Tag)[];
   votes: {
@@ -61,13 +57,10 @@ function QuestionsContent() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('newest');
-  const [filterBy, setFilterBy] = useState('all');
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [searchResults, setSearchResults] = useState<Question[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
 
   // Initialize from URL parameters
@@ -99,7 +92,7 @@ function QuestionsContent() {
   // Listen for changes in search query from URL and refetch questions
   useEffect(() => {
     fetchQuestions();
-  }, [searchParams.get('search'), selectedTags, sortBy, filterBy]);
+  }, [searchParams.get('search'), selectedTags]);
 
   useEffect(() => {
     fetchTags();
@@ -111,8 +104,6 @@ function QuestionsContent() {
       const urlSearch = searchParams.get('search') || '';
       if (urlSearch) params.append('search', urlSearch);
       if (selectedTags.length > 0) params.append('tags', selectedTags.join(','));
-      if (sortBy !== 'newest') params.append('sort', sortBy);
-      if (filterBy !== 'all') params.append('filter', filterBy);
 
       const response = await fetch(`/api/questions?${params.toString()}`);
       if (response.ok) {
@@ -164,18 +155,19 @@ function QuestionsContent() {
   };
 
   const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+    const newSelectedTags = selectedTags.includes(tag) 
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    
+    setSelectedTags(newSelectedTags);
+    
+    // Auto-apply filters immediately
+    setTimeout(() => fetchQuestions(), 100); // Small delay to ensure state is updated
   };
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedTags([]);
-    setSortBy('newest');
-    setFilterBy('all');
     router.push('/questions');
   };
 
@@ -183,17 +175,8 @@ function QuestionsContent() {
     fetchQuestions();
   };
 
-  const getVoteCount = (votes: { upvotes: string[]; downvotes: string[] }) => {
-    return votes.upvotes.length - votes.downvotes.length;
-  };
-
-  // Filter questions client-side for answered/unanswered/tags
-  const filteredQuestions = questions.filter((q) => {
-    if (filterBy === 'answered') return q.answers > 0;
-    if (filterBy === 'unanswered') return q.answers === 0;
-    if (filterBy === 'accepted') return q.isAccepted;
-    return true;
-  }).filter((q) => selectedTags.length === 0 || q.tags.some(t => selectedTags.includes(typeof t === 'string' ? t : t.name)));
+  // Note: We've moved most filtering to the server, this is just for display
+  const filteredQuestions = questions;
 
   // Tag search and selection logic
   const displayedTags = [
@@ -217,210 +200,54 @@ function QuestionsContent() {
   return (
     <div className="min-h-screen bg-black">
       <main className="container-responsive py-4 sm:py-6 lg:py-8">
-        {/* Mobile Filter Button */}
-        <div className="lg:hidden mb-4">
-          <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="btn btn-outline w-full flex items-center justify-center gap-2"
-          >
-            <FiFilter className="w-4 h-4" />
-            Filters & Sorting
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Mobile Filter Modal */}
-          <Dialog open={isFilterOpen} onClose={() => setIsFilterOpen(false)} className="lg:hidden relative z-50">
-            <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
-            <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="card p-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <Dialog.Title className="text-xl font-bold gradient-text">Filters</Dialog.Title>
-                  <button
-                    onClick={() => setIsFilterOpen(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <FiX className="w-6 h-6" />
-                  </button>
-                </div>
-                
-                {/* Mobile Filter Content */}
-                <div className="space-y-4">
-                  {/* Sort By */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#c8acd6] mb-2">Sort By</label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="input bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="newest">Newest</option>
-                      <option value="oldest">Oldest</option>
-                      <option value="votes">Most Voted</option>
-                      <option value="views">Most Viewed</option>
-                      <option value="answers">Most Answered</option>
-                    </select>
-                  </div>
-                  
-                  {/* Filter By */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#c8acd6] mb-2">Filter By</label>
-                    <select
-                      value={filterBy}
-                      onChange={(e) => setFilterBy(e.target.value)}
-                      className="input bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="all">All Questions</option>
-                      <option value="unanswered">Unanswered</option>
-                      <option value="answered">Answered</option>
-                      <option value="accepted">Accepted</option>
-                    </select>
-                  </div>
-                  
-                  {/* Tags */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#c8acd6] mb-3">Filter by Tags</label>
-                    <input
-                      type="text"
-                      placeholder="Search tags..."
-                      value={tagSearch}
-                      onChange={e => setTagSearch(e.target.value)}
-                      className="input mb-2 bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    />
-                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                      {displayedTags.slice(0, 20).map((tag) => (
-                        tag ? (
-                          <button
-                            key={tag.name}
-                            type="button"
-                            onClick={() => handleTagToggle(tag.name)}
-                            className={`relative tag text-xs ${selectedTags.includes(tag.name) ? 'bg-[#433d8b]/40 border-[#c8acd6]/50' : 'bg-[#433d8b]/20 border-[#433d8b]/30'}`}
-                          >
-                            <FiTag className="w-3 h-3 mr-1" />
-                            {tag.name}
-                            {selectedTags.includes(tag.name) && (
-                              <span className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5">
-                                <FiCheck className="w-2 h-2 text-white" />
-                              </span>
-                            )}
-                          </button>
-                        ) : null
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2 pt-4">
-                    <button
-                      type="button"
-                      className="btn btn-outline flex-1"
-                      onClick={() => {
-                        clearFilters();
-                        setIsFilterOpen(false);
-                      }}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary flex-1"
-                      onClick={() => {
-                        applyFilters();
-                        setIsFilterOpen(false);
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </Dialog.Panel>
-            </div>
-          </Dialog>
-
-          {/* Desktop Left Panel: Filters */}
-          <aside className="lg:col-span-3 hidden lg:block">
-            <div className="card p-4 sticky top-20">
-              <h3 className="text-xl font-bold gradient-text mb-4 flex items-center gap-2">
-                <FiFilter className="w-5 h-5" /> Filters
-              </h3>
-              {/* Sort By */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#c8acd6] mb-2">Sort By</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="input bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="votes">Most Voted</option>
-                  <option value="views">Most Viewed</option>
-                  <option value="answers">Most Answered</option>
-                </select>
-              </div>
-              {/* Filter By */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#c8acd6] mb-2">Filter By</label>
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value)}
-                  className="input bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="all">All Questions</option>
-                  <option value="unanswered">Unanswered</option>
-                  <option value="answered">Answered</option>
-                  <option value="accepted">Accepted</option>
-                </select>
-              </div>
-              {/* Tags */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#c8acd6] mb-3">Filter by Tags</label>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
+          {/* Questions List */}
+          <main className="xl:col-span-10 w-full">
+            {/* Tag Filter Bar */}
+            <div className="card p-4 mb-6">
+              <h3 className="text-lg font-semibold mb-3 gradient-text">Filter by Tags</h3>
+              <div className="mb-3">
                 <input
                   type="text"
                   placeholder="Search tags..."
                   value={tagSearch}
                   onChange={e => setTagSearch(e.target.value)}
-                  className="input mb-2 bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="input bg-[#181a2a] border-[#433d8b] text-[#c8acd6] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
-                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                  {displayedTags.map((tag) => (
-                    tag ? (
-                      <button
-                        key={tag.name}
-                        type="button"
-                        onClick={() => handleTagToggle(tag.name)}
-                        className={`relative tag ${selectedTags.includes(tag.name) ? 'bg-[#433d8b]/40 border-[#c8acd6]/50' : 'bg-[#433d8b]/20 border-[#433d8b]/30'}`}
-                      >
-                        <FiTag className="w-3 h-3 mr-1" />
-                        {tag.name}
-                        {selectedTags.includes(tag.name) && (
-                          <span className="absolute bottom-0 right-0 bg-green-500 rounded-full p-0.5">
-                            <FiCheck className="w-3 h-3 text-white" />
-                          </span>
-                        )}
-                      </button>
-                    ) : null
-                  ))}
-                </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline w-full mt-4"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary w-full mt-2"
-                onClick={applyFilters}
-              >
-                Apply Filter
-              </button>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                {displayedTags.slice(0, 20).map((tag) => (
+                  tag ? (
+                    <button
+                      key={tag.name}
+                      type="button"
+                      onClick={() => handleTagToggle(tag.name)}
+                      className={`relative tag ${selectedTags.includes(tag.name) ? 'bg-[#433d8b]/40 border-[#c8acd6]/50' : 'bg-[#433d8b]/20 border-[#433d8b]/30'}`}
+                    >
+                      <FiTag className="w-3 h-3 mr-1" />
+                      {tag.name}
+                      {selectedTags.includes(tag.name) && (
+                        <span className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5">
+                          <FiCheck className="w-2 h-2 text-white" />
+                        </span>
+                      )}
+                    </button>
+                  ) : null
+                ))}
+              </div>
+              {(selectedTags.length > 0 || tagSearch) && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
             </div>
-          </aside>
-
-          {/* Center: Questions List */}
-          <main className="lg:col-span-9 xl:col-span-7 w-full">
+            
             {/* Questions List */}
             {filteredQuestions.length === 0 ? (
               <div className="card p-6 sm:p-8 text-center">
@@ -480,7 +307,13 @@ function QuestionsContent() {
                         <div className="flex items-center flex-wrap gap-x-3 sm:gap-x-4 gap-y-1">
                           <div className="flex items-center space-x-1">
                             <FiUser className="w-3 h-3 sm:w-4 sm:h-4" />
-                            <span className="truncate max-w-[120px] sm:max-w-none">{question.author.username}</span>
+                            <Link 
+                              href={`/users/${question.author.username}`}
+                              className="truncate max-w-[120px] sm:max-w-none text-[#58a6ff] hover:text-[#c8acd6] transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {question.author.username}
+                            </Link>
                           </div>
                           <div className="flex items-center space-x-1">
                             <FiEye className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -516,14 +349,6 @@ function QuestionsContent() {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-400">{filteredQuestions.length}</div>
                   <div className="text-xs text-gray-400">Total Questions</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">{filteredQuestions.filter(q => q.answers > 0).length}</div>
-                  <div className="text-xs text-gray-400">Answered</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">{filteredQuestions.filter(q => q.isAccepted).length}</div>
-                  <div className="text-xs text-gray-400">Accepted</div>
                 </div>
               </div>
             </div>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { FiCamera, FiUser } from "react-icons/fi";
 import toast from "react-hot-toast";
 import countryCodes from '../../../lib/countryCodes';
 
@@ -37,6 +38,8 @@ export default function EditProfilePage() {
     email?: string;
   }>({});
   const [loading, setLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (session?.user) {
@@ -90,6 +93,73 @@ export default function EditProfilePage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Only JPEG, PNG, and WebP are allowed.');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('File size too large. Maximum 5MB allowed.');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success('Avatar updated successfully!');
+        // Update session data to reflect new avatar
+        await update();
+        // Refresh the page to show the new avatar
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to upload avatar');
+      }
+    } catch (error) {
+      toast.error('Failed to upload avatar. Please try again.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const getUserAvatar = () => {
+    if (session?.user?.avatar) {
+      return (
+        <img 
+          src={session.user.avatar} 
+          alt="User Avatar"
+          className="w-24 h-24 rounded-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+        <FiUser className="w-8 h-8 text-white" />
+      </div>
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -133,6 +203,36 @@ export default function EditProfilePage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="card py-8 px-4 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative group">
+                {getUserAvatar()}
+                <button
+                  type="button"
+                  onClick={handleAvatarClick}
+                  disabled={avatarUploading}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:cursor-not-allowed"
+                >
+                  {avatarUploading ? (
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <FiCamera className="w-6 h-6 text-white" />
+                  )}
+                </button>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Click to upload avatar<br />
+                JPEG, PNG, WebP (max 5MB)
+              </p>
+            </div>
+
             {/* Account Info */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-[#c8acd6]">

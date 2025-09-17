@@ -34,14 +34,14 @@ export default function FollowRequestsPage() {
       const response = await fetch('/api/profile');
       if (response.ok) {
         const data = await response.json();
-        const userWithRequests = await fetch(`/api/users/${data.user._id}`);
+        const userWithRequests = await fetch(`/api/users?id=${data.user._id}`);
         if (userWithRequests.ok) {
           const userData = await userWithRequests.json();
           // Get details of users who sent follow requests
           if (userData.pendingFollowRequests && userData.pendingFollowRequests.length > 0) {
             const requestsData = await Promise.all(
               userData.pendingFollowRequests.map(async (requesterId: string) => {
-                const requesterResponse = await fetch(`/api/users/${requesterId}`);
+                const requesterResponse = await fetch(`/api/users?id=${requesterId}`);
                 if (requesterResponse.ok) {
                   const requesterData = await requesterResponse.json();
                   return {

@@ -13,7 +13,7 @@ export async function GET(
     await dbConnect();
     
     const question = await Question.findById(params.id)
-      .populate('author', 'username reputation')
+      .populate('author', 'username')
       .lean();
     
     if (!question) {
@@ -28,7 +28,7 @@ export async function GET(
     
     // Get answers for this question
     const answers = await Answer.find({ question: params.id })
-      .populate('author', 'username reputation')
+      .populate('author', 'username')
       .sort({ isAccepted: -1, 'votes.upvotes': -1, createdAt: 1 })
       .lean();
     
@@ -79,16 +79,17 @@ export async function PUT(
         { status: 403 }
       );
     }
-    const { title, content, tags } = await request.json();
+    const { title, content, tags, shortDescription } = await request.json();
     const updatedQuestion = await Question.findByIdAndUpdate(
       params.id,
       {
         title,
         content,
+        shortDescription,
         tags: tags.map((tag: string) => tag.toLowerCase().trim()),
       },
       { new: true }
-    ).populate('author', 'username reputation');
+    ).populate('author', 'username');
     return NextResponse.json(updatedQuestion);
   } catch (error) {
     console.error('Error updating question:', error);
