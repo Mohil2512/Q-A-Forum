@@ -16,6 +16,7 @@ A modern, feature-rich Q&A platform built with Next.js, featuring the InfinityFX
 - **✅ Profile Image Upload**: Complete avatar management with Cloudinary integration
 - **✅ Username-Based Profiles**: Clean `/users/username` URLs for better SEO
 - **✅ Clickable Usernames**: All user references link to profile pages
+- **✅ Vercel Analytics**: Integrated web analytics and performance monitoring
 
 ## 🎨 InfinityFX Theme
 
@@ -63,6 +64,7 @@ This application features a custom InfinityFX-inspired theme with:
 
 ### Additional Tools
 - **Cloudinary**: Image upload and optimization
+- **Vercel Analytics**: Web analytics and performance monitoring
 - **Nodemailer**: Email notifications
 - **bcryptjs**: Password hashing
 - **Sharp**: Image processing
